@@ -1,5 +1,5 @@
 (library
   (name mew_vi)
   (public_name mew_vi)
-  (libraries mew)
+  (libraries camomile mew)
   (flags (:standard -safe-string)))
