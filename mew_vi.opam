@@ -4,18 +4,19 @@ authors: [ "ZAN DoYe" ]
 homepage: "https://github.com/kandu/mew_vi"
 bug-reports: "https://github.com/kandu/mew_vi/issues"
 license: "MIT"
-dev-repo: "https://github.com/kandu/mew_vi.git"
+dev-repo: "git+https://github.com/kandu/mew_vi.git"
 build: [
   ["dune" "build" "-p" name "-j" jobs]
   ["dune" "runtest" "-p" name "-j" jobs] {with-test & (ocaml:version >= "4.04.0")}
 ]
 depends: [
   "ocaml" {>= "4.03.0"}
-  "result"
+  "camomile"
+  "mew"
   "dune" {build}
   "ppx_expect" {with-test}
 ]
 
-synopsis: ""
+synopsis: "Modal editing witch, VI interpreter"
 description: """
 """
