@@ -1,19 +1,4 @@
-type vi_object=
-  | Up of int
-  | Down of int
-  | Left of int
-  | Right of int
-  | Word of int
-  | WORD of int
-  | Word_back of int
-  | WORD_back of int
-  | Word_end of int
-  | WORD_end of int
-
-type action=
-  | Dummy
-  | Move of vi_object
-  | Delete of vi_object
+open Vi_action
 
 module Make (Concurrent:Mew.Concurrent.S) =
 struct
@@ -22,7 +7,7 @@ struct
 
   let (>>=)= Thread.bind
 
-  let rec interpret (keyIn: Modal.Key.t MsgBox.t) (action: action MsgBox.t)=
+  let rec interpret (keyIn: Modal.Key.t MsgBox.t) (action: action MsgBox.t) ()=
     MsgBox.get keyIn >>= fun key->
       (match key.code with
         | Char _uchar-> MsgBox.put action Dummy
@@ -51,7 +36,7 @@ struct
         | End-> MsgBox.put action Dummy
         | Insert-> MsgBox.put action Dummy
         | Delete-> MsgBox.put action Dummy
-        | Backspace-> MsgBox.put action Dummy) >>= fun ()->
+        | Backspace-> MsgBox.put action Dummy) >>=
       interpret keyIn action
 end
 
