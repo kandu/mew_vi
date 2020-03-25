@@ -9,4 +9,6 @@
 
 
 module Core = Core
+module Modal = Modal
+module Key = Key
 
