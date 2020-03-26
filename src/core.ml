@@ -1,10 +1,10 @@
 module Make (Concurrent:Mew.Concurrent.S) =
 struct
-  module Core = Mew.Make(Modal)(Concurrent)
+  module Base = Mew.Make(Modal)(Concurrent)
   module Interpret = Interpret.Make(Concurrent)
 
   class edit state =object
-    inherit Core.edit state
+    inherit Base.edit state
 
     val action_output
       : Vi_action.action Concurrent.MsgBox.t
@@ -25,8 +25,9 @@ struct
           timeout= None;
           bindings= Mode.KeyTrie.create None}
     in
-  object
-    inherit Core.state modes
+  object(self)
+    inherit Base.state modes
+    method vi_edit= new edit self
   end
 end
 
