@@ -11,6 +11,7 @@ type vi_object=
   | WORD_end of int
 
 type action=
+  | Bypass of Key.t
   | Dummy
   | Move of vi_object
   | Delete of vi_object
