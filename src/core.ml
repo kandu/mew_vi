@@ -13,7 +13,7 @@ struct
     method action_output= action_output
 
     initializer
-      Concurrent.Thread.async (Interpret.interpret i action_output)
+      Concurrent.Thread.async (Interpret.interpret o action_output)
   end
 
   class state=
