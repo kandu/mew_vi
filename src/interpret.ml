@@ -1,4 +1,5 @@
 open Vi_action
+open Edit_action
 
 module Make (Concurrent:Mew.Concurrent.S) =
 struct
@@ -7,15 +8,15 @@ struct
 
   let (>>=)= Thread.bind
 
-  let rec interpret (keyIn: Modal.Key.t MsgBox.t) (action: action MsgBox.t) ()=
+  let rec interpret (keyIn: Modal.Key.t MsgBox.t) (action: Edit_action.t MsgBox.t) ()=
     MsgBox.get keyIn >>= fun key->
       (match key.code with
         | Char _uchar-> MsgBox.put action (Bypass key)
         | Enter-> MsgBox.put action (Bypass key)
         | Escape-> MsgBox.put action (Bypass key)
         | Tab-> MsgBox.put action (Bypass key)
-        | Up-> MsgBox.put action @@ Move (Up 1)
-        | Down-> MsgBox.put action @@ Move (Down 1)
+        | Up-> MsgBox.put action @@ (Vi (Motion ((Upword 1), 1)))
+        | Down-> MsgBox.put action @@ (Vi (Motion ((Downword 1), 1)))
         | Left-> MsgBox.put action @@ (Bypass key)
         | Right-> MsgBox.put action @@ (Bypass key)
         | F1-> MsgBox.put action (Bypass key)

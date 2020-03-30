@@ -7,7 +7,7 @@ struct
     inherit Base.edit state
 
     val action_output
-      : Vi_action.action Concurrent.MsgBox.t
+      : Edit_action.t Concurrent.MsgBox.t
       = Concurrent.MsgBox.create ()
 
     method action_output= action_output
