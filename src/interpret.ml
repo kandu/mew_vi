@@ -29,10 +29,10 @@ struct
       | key::tl->
         if key.Key.control && key.code = Char "[" then
           (current_mode:= Mode.Name.Normal;
-          Accept (Vi [ChangeMode Normal], tl, !default_resolver_normal))
+           Accept (Vi [Motion ((Left 1), 1); ChangeMode Normal], tl, !default_resolver_normal))
         else if key.code = Escape then
           (current_mode:= Mode.Name.Normal;
-          Accept (Vi [ChangeMode Normal], tl, !default_resolver_normal))
+           Accept (Vi [Motion ((Left 1), 1); ChangeMode Normal], tl, !default_resolver_normal))
         else
           Accept (Bypass [key], tl, !default_resolver_insert)
 
