@@ -155,7 +155,14 @@ struct
       default_resolver_normal:= Normal.try_count "" Normal.try_action
   end
 
-  let rec interpret ?(resolver= Resolver.resolver_insert) ?(keyseq=[]) (keyIn: Modal.Key.t MsgBox.t) (action: Edit_action.t MsgBox.t) ()=
+  let rec interpret ?resolver ?(keyseq=[]) (keyIn: Modal.Key.t MsgBox.t) (action: Edit_action.t MsgBox.t) ()=
+    let resolver=
+      match resolver with
+      | Some resolver-> resolver
+      | None-> match !Resolver.current_mode with
+        | Mode.Name.Insert-> !Resolver.default_resolver_insert
+        | _-> !Resolver.default_resolver_normal
+    in
     (match keyseq with
     | []-> MsgBox.get keyIn >>= fun key-> Thread.return [key]
     | _-> Thread.return keyseq)
@@ -170,6 +177,6 @@ struct
           | Mode.Name.Insert-> !Resolver.default_resolver_insert
           | _-> !Resolver.default_resolver_normal
         in
-        interpret  ~resolver keyIn action ()
+        interpret ~resolver keyIn action ()
 end
 
