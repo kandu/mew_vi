@@ -3,14 +3,22 @@ type mode=
   | Insert
   | CommandLine
 
+type insert=
+  | Append of string
+  | AppendEol of string
+  | Insert of string
+  | InsertBol of string
+  | Newline_below of string
+  | Newline_above of string
+
 type motion=
   (* left right *)
   | Left of int
   | Right of int
-  | Line_FirstChar
-  | Line_FirstNonBlank
-  | Line_LastChar
-  | Line_LastNonBlank
+  | Line_FirstChar of int
+  | Line_FirstNonBlank of int
+  | Line_LastChar of int
+  | Line_LastNonBlank of int
 
   (* up down *)
   | Upword of int
@@ -30,23 +38,23 @@ type motion=
   | WORD_back_end of int (* gE *)
 
   (* text object *)
-  | Sentence_backword
-  | Sentence_forward
-  | Paragraph_backward
-  | Paragraph_forward
+  | Sentence_backword of int
+  | Sentence_forward of int
+  | Paragraph_backward of int
+  | Paragraph_forward of int
 
   (* text object selection *)
-  | Word_include
-  | Word_inner
-  | WORD_include
-  | WORD_inner
-  | Sentence_include
-  | Sentence_inner
-  | Paragraph_include
-  | Paragraph_inner
+  | Word_include of int
+  | Word_inner of int
+  | WORD_include of int
+  | WORD_inner of int
+  | Sentence_include of int
+  | Sentence_inner of int
+  | Paragraph_include of int
+  | Paragraph_inner of int
 
 type t=
-  | Insert of string
+  | Insert of insert * int
   | Motion of motion * int
   | Delete of motion * int
   | ChangeMode of mode
