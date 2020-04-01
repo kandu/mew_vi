@@ -136,12 +136,11 @@ struct
             Rejected keyseq
 
       let try_action count keyseq=
-        ignore count;
         match keyseq with
         | []-> Rejected []
         | _->
           match try_change_mode keyseq with
-          | Rejected keyseq-> try_motion keyseq
+          | Rejected keyseq-> try_motion ?count keyseq
           | r-> r
     end
 
