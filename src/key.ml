@@ -1,7 +1,5 @@
-open CamomileLibraryDefault.Camomile
-
 type code =
-  | Char of UChar.t
+  | Char of string
   | Enter
   | Escape
   | Tab
@@ -29,37 +27,48 @@ type code =
   | Delete
   | Backspace
 
-let code_to_int= function
-  | Enter-> 1
-  | Escape-> 2
-  | Tab-> 3
-  | Up-> 4
-  | Down-> 5
-  | Left-> 6
-  | Right-> 7
-  | F1-> 8
-  | F2-> 9
-  | F3-> 10
-  | F4-> 11
-  | F5-> 12
-  | F6-> 13
-  | F7-> 14
-  | F8-> 15
-  | F9-> 16
-  | F10-> 17
-  | F11-> 18
-  | F12-> 19
-  | Next_page-> 20
-  | Prev_page-> 21
-  | Home-> 22
-  | End-> 23
-  | Insert-> 24
-  | Delete-> 25
-  | Backspace-> 26
-  | Char uchar-> 27 + (UChar.int_of uchar)
+let code_to_int=
+  let bin_to_int bin=
+    let len= String.length bin in
+    let rec calc s pos acc=
+      if pos < len then
+        calc s (pos+1) (acc + (int_of_char s.[pos]) lsl (pos * 8))
+      else
+        acc
+    in
+    calc bin 0 0
+  in
+  function
+    | Enter-> 1
+    | Escape-> 2
+    | Tab-> 3
+    | Up-> 4
+    | Down-> 5
+    | Left-> 6
+    | Right-> 7
+    | F1-> 8
+    | F2-> 9
+    | F3-> 10
+    | F4-> 11
+    | F5-> 12
+    | F6-> 13
+    | F7-> 14
+    | F8-> 15
+    | F9-> 16
+    | F10-> 17
+    | F11-> 18
+    | F12-> 19
+    | Next_page-> 20
+    | Prev_page-> 21
+    | Home-> 22
+    | End-> 23
+    | Insert-> 24
+    | Delete-> 25
+    | Backspace-> 26
+    | Char bin-> 27 + (bin_to_int bin)
 
 let code_to_string= function
-  | Char uchar-> Printf.sprintf "UChar %d" (UChar.int_of uchar)
+  | Char bin-> Printf.sprintf "Char %s" bin
   | Enter-> "Enter"
   | Escape-> "Escape"
   | Tab-> "Tab"
