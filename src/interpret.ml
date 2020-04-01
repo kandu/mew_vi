@@ -29,12 +29,21 @@ struct
       | key::tl->
         if key.Key.control && key.code = Char "[" then
           (current_mode:= Mode.Name.Normal;
-           Accept (Vi [Motion ((Left 1), 1); ChangeMode Normal], tl, !default_resolver_normal))
+          Accept (
+            Vi [Motion ((Left 1), 1); ChangeMode Normal]
+            , tl
+            , !default_resolver_normal))
         else if key.code = Escape then
           (current_mode:= Mode.Name.Normal;
-           Accept (Vi [Motion ((Left 1), 1); ChangeMode Normal], tl, !default_resolver_normal))
+          Accept (
+            Vi [Motion ((Left 1), 1); ChangeMode Normal]
+            , tl
+            , !default_resolver_normal))
         else
-          Accept (Bypass [key], tl, !default_resolver_insert)
+          Accept (
+            Bypass [key]
+            , tl
+            , !default_resolver_insert)
 
     module Normal = struct
       let rec try_count numseq continuation keyseq=
@@ -106,7 +115,10 @@ struct
             match key.Key.code with
             | Char "i"->
               (current_mode:= Mode.Name.Insert;
-              Accept (Vi [ChangeMode Insert], tl, !default_resolver_insert))
+              Accept (
+                Vi [ChangeMode Insert]
+                , tl
+                , !default_resolver_insert))
             | Char "I"->
               (current_mode:= Mode.Name.Insert;
               Accept (
@@ -154,7 +166,10 @@ struct
       default_resolver_normal:= Normal.try_count "" Normal.try_action
   end
 
-  let rec interpret ?resolver ?(keyseq=[]) (keyIn: Modal.Key.t MsgBox.t) (action: Edit_action.t MsgBox.t) ()=
+  let rec interpret
+    ?resolver ?(keyseq=[])
+    (keyIn: Modal.Key.t MsgBox.t) (action: Edit_action.t MsgBox.t) ()
+    =
     let resolver=
       match resolver with
       | Some resolver-> resolver
@@ -167,10 +182,13 @@ struct
     | _-> Thread.return keyseq)
     >>= fun keyseq->
       match resolver keyseq with
-      | Accept (edit, keyseq, resolver)-> MsgBox.put action edit >>= fun ()->
+      | Accept (edit, keyseq, resolver)->
+        MsgBox.put action edit >>= fun ()->
         interpret ~resolver ~keyseq keyIn action ()
-      | Continue (resolver, keyseq)-> interpret ~resolver ~keyseq keyIn action ()
-      | Rejected _keyseq-> MsgBox.put action Dummy >>= fun ()->
+      | Continue (resolver, keyseq)->
+        interpret ~resolver ~keyseq keyIn action ()
+      | Rejected _keyseq->
+        MsgBox.put action Dummy >>= fun ()->
         let resolver=
           match !Resolver.current_mode with
           | Mode.Name.Insert-> !Resolver.default_resolver_insert

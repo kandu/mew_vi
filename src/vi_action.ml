@@ -1,26 +1,26 @@
 type insert=
-  | Append of string
-  | AppendEol of string
-  | Insert of string
-  | InsertBol of string
-  | Newline_below of string
-  | Newline_above of string
+  | Append of string (* a *)
+  | AppendEol of string (* A *)
+  | Insert of string (* i *)
+  | InsertBol of string (* I *)
+  | Newline_below of string (* o *)
+  | Newline_above of string (* O *)
 
 type motion=
   (* left right *)
-  | Left of int
-  | Right of int
-  | Line_FirstChar of int
-  | Line_FirstNonBlank of int
-  | Line_LastChar of int
-  | Line_LastNonBlank of int
+  | Left of int (* h *)
+  | Right of int (* l *)
+  | Line_FirstChar of int (* 0 *)
+  | Line_FirstNonBlank of int (* ^ *)
+  | Line_LastChar of int (* $ *)
+  | Line_LastNonBlank of int (* g_ *)
 
   (* up down *)
-  | Upword of int
-  | Downword of int
-  | GotoLine of int
-  | GotoLine_first
-  | GotoLine_last
+  | Upword of int (* k *)
+  | Downword of int (* j *)
+  | GotoLine of int (* gg or G *)
+  | GotoLine_first (* gg *)
+  | GotoLine_last (* G *)
 
   (* word *)
   | Word of int (* w *)
@@ -33,20 +33,20 @@ type motion=
   | WORD_back_end of int (* gE *)
 
   (* text object *)
-  | Sentence_backword of int
-  | Sentence_forward of int
-  | Paragraph_backward of int
-  | Paragraph_forward of int
+  | Sentence_backword of int (* ( *)
+  | Sentence_forward of int (* ) *)
+  | Paragraph_backward of int (* { *)
+  | Paragraph_forward of int (* } *)
 
   (* text object selection *)
-  | Word_include of int
-  | Word_inner of int
-  | WORD_include of int
-  | WORD_inner of int
-  | Sentence_include of int
-  | Sentence_inner of int
-  | Paragraph_include of int
-  | Paragraph_inner of int
+  | Word_include of int (* aw *)
+  | Word_inner of int (* iw *)
+  | WORD_include of int (* aW *)
+  | WORD_inner of int (* iW *)
+  | Sentence_include of int (* as *)
+  | Sentence_inner of int (* is *)
+  | Paragraph_include of int (* ap *)
+  | Paragraph_inner of int (* ip *)
 
 type t=
   | Insert of insert * int
