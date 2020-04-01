@@ -1,8 +1,3 @@
-type mode=
-  | Normal
-  | Insert
-  | CommandLine
-
 type insert=
   | Append of string
   | AppendEol of string
@@ -57,5 +52,5 @@ type t=
   | Insert of insert * int
   | Motion of motion * int
   | Delete of motion * int
-  | ChangeMode of mode
+  | ChangeMode of Mode.Name.t
 

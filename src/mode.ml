@@ -2,7 +2,7 @@ module Name = struct
   type t=
     | Normal
     | Insert
-    | Command
+    | Commandline
 
   let compare= compare
 end
