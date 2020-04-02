@@ -193,6 +193,11 @@ struct
       | Continue (resolver, keyseq)->
         interpret ~resolver ~keyseq keyIn action ()
       | Rejected _keyseq->
+        let resolver=
+          match !Resolver.current_mode with
+          | Mode.Name.Insert-> !Resolver.default_resolver_insert
+          | _-> !Resolver.default_resolver_normal
+        in
         MsgBox.put action Dummy >>= fun ()->
         interpret ~resolver keyIn action ()
 end
