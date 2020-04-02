@@ -148,12 +148,17 @@ struct
             Rejected keyseq
 
       let try_action count keyseq=
+        let drop_first_key= function
+          | Rejected [] as r-> r
+          | Rejected (_::tl)-> Rejected tl
+          | r-> r
+        in
         match keyseq with
         | []-> Rejected []
-        | _->
-          match try_change_mode keyseq with
+        | _-> drop_first_key
+          (match try_change_mode keyseq with
           | Rejected keyseq-> try_motion ?count keyseq
-          | r-> r
+          | r-> r)
     end
 
     let set_mode= function
