@@ -16,8 +16,8 @@ type motion=
   | Line_LastNonBlank of int (* g_ *)
 
   (* up down *)
-  | Upword of int (* k *)
-  | Downword of int (* j *)
+  | Upward of int (* k *)
+  | Downward of int (* j *)
   | GotoLine of int (* gg or G *)
   | GotoLine_first (* gg *)
   | GotoLine_last (* G *)

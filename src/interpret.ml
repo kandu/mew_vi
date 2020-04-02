@@ -94,14 +94,14 @@ struct
                   , tl
                   , !default_resolver_normal)
               | Char "j"-> Accept (
-                  Vi [Motion ((Left num), count)]
+                  Vi [Motion ((Downward num), count)]
                   , tl
                   , !default_resolver_normal)
               | Char "k"-> Accept (
-                  Vi [Motion ((Right num), count)]
+                  Vi [Motion ((Upward num), count)]
                   , tl
                   , !default_resolver_normal)
-              | _-> Accept (Bypass [key], tl, !default_resolver_normal)
+              | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, !default_resolver_normal)
         in
@@ -189,11 +189,6 @@ struct
         interpret ~resolver ~keyseq keyIn action ()
       | Rejected _keyseq->
         MsgBox.put action Dummy >>= fun ()->
-        let resolver=
-          match !Resolver.current_mode with
-          | Mode.Name.Insert-> !Resolver.default_resolver_insert
-          | _-> !Resolver.default_resolver_normal
-        in
         interpret ~resolver keyIn action ()
 end
 
