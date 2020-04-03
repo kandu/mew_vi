@@ -101,6 +101,14 @@ struct
                   Vi [Motion ((Upward num), count)]
                   , tl
                   , !default_resolver_normal)
+              | Char "w"-> Accept (
+                  Vi [Motion ((Word num), count)]
+                  , tl
+                  , !default_resolver_normal)
+              | Char "b"-> Accept (
+                  Vi [Motion ((Word_back num), count)]
+                  , tl
+                  , !default_resolver_normal)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, !default_resolver_normal)
