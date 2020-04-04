@@ -46,33 +46,54 @@ struct
             , !default_resolver_insert)
 
     module Normal = struct
-      let rec try_count numseq continuation keyseq=
+      let try_count continuation keyseq=
         let get_count numseq=
           match numseq with
           | ""-> None
           | _-> Some (int_of_string numseq)
 
         in
-        let continue ()=
+        let continue numseq keyseq=
           let count= numseq |> get_count in
           let resolver= continuation count in
           Continue (resolver, keyseq)
         in
-        match keyseq with
-        | []-> Rejected keyseq
-        | key::tl->
-          match key.Key.code with
-          | Char code->
-            if String.length code = 1 && code >= "0" && code <= "9"
-              && not (key.Key.control || key.Key.meta || key.Key.shift)
-            then
-              let resolver= try_count (numseq ^ code) continuation in
-              Continue (resolver , tl)
-            else
-              continue ()
-          | Escape-> Rejected tl
-          | _->
-            continue ()
+        let rec other_num numseq keyseq=
+          match keyseq with
+          | []-> Rejected keyseq
+          | key::tl->
+            match key.Key.code with
+            | Char code->
+              if String.length code = 1 && code >= "0" && code <= "9"
+                && not (key.Key.control || key.Key.meta || key.Key.shift)
+              then
+                let resolver= other_num (numseq ^ code) in
+                Continue (resolver , tl)
+              else
+                continue numseq keyseq
+            | Escape-> Rejected tl
+            | _->
+              continue numseq keyseq
+        in
+        let first_num ()=
+          match keyseq with
+          | []-> Rejected keyseq
+          | key::tl->
+            match key.Key.code with
+            | Char code->
+              if String.length code = 1 && not (key.Key.control || key.Key.meta || key.Key.shift) then
+                if code >= "1" && code <= "9" then
+                  let resolver= other_num code in
+                  Continue (resolver, tl)
+                else
+                  continue "" keyseq
+              else
+                continue "" keyseq
+            | Escape-> Rejected tl
+            | _->
+              continue "" keyseq
+        in
+        first_num ()
 
       let try_motion ?(count=1) keyseq=
         let try_motion_n num keyseq=
@@ -109,6 +130,10 @@ struct
                   Vi [Motion ((Line_LastChar num), count)]
                   , tl
                   , !default_resolver_normal)
+              | Char "w"-> Accept (
+                  Vi [Motion ((Word num), count)]
+                  , tl
+                  , !default_resolver_normal)
               | Char "b"-> Accept (
                   Vi [Motion ((Word_back num), count)]
                   , tl
@@ -117,7 +142,7 @@ struct
             else
               Accept (Bypass [key], tl, !default_resolver_normal)
         in
-        try_count "" try_motion_n keyseq
+        try_count try_motion_n keyseq
 
       let try_change_mode keyseq=
         match keyseq with
@@ -175,7 +200,7 @@ struct
     let ()=
       set_mode Mode.Name.Normal;
       default_resolver_insert:= resolver_insert;
-      default_resolver_normal:= Normal.try_count "" Normal.try_action
+      default_resolver_normal:= Normal.try_count Normal.try_action
   end
 
   let rec interpret
