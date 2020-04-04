@@ -101,8 +101,12 @@ struct
                   Vi [Motion ((Upward num), count)]
                   , tl
                   , !default_resolver_normal)
-              | Char "w"-> Accept (
-                  Vi [Motion ((Word num), count)]
+              | Char "0"-> Accept (
+                  Vi [Motion ((Line_FirstChar num), count)]
+                  , tl
+                  , !default_resolver_normal)
+              | Char "$"-> Accept (
+                  Vi [Motion ((Line_LastChar num), count)]
                   , tl
                   , !default_resolver_normal)
               | Char "b"-> Accept (
