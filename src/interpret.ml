@@ -1,5 +1,6 @@
 open Vi_action
 open Edit_action
+open React
 
 module Make (Concurrent:Mew.Concurrent.S) =
 struct
@@ -11,42 +12,49 @@ struct
   type keyseq= Modal.Key.t list
 
   module Resolver = struct
-    type t= keyseq -> result
+    type t= status -> keyseq -> result
 
     and result=
       | Accept of (Edit_action.t * keyseq * t)
       | Continue of (t * keyseq)
       | Rejected of keyseq
 
-    let resolver_dummy= fun keyseq-> Rejected keyseq
-    let default_resolver_insert= ref resolver_dummy
-    let default_resolver_normal= ref resolver_dummy
-    let current_mode= ref Mode.Name.Normal
+    and status= {
+      mode: Mode.Name.t signal;
+      set_mode: ?step:step -> Mode.Name.t -> unit;
+      keyseq: keyseq signal;
+      set_keyseq: ?step:step -> keyseq -> unit;
+      mutable resolver_insert: t;
+      mutable resolver_normal: t;
+      mutable resolver_command: t;
+    }
 
-    let resolver_insert keyseq=
+    let resolver_dummy= fun _status keyseq-> Rejected keyseq
+
+    let resolver_insert status keyseq=
       match keyseq with
       | []-> Rejected []
       | key::tl->
         if key.Key.control && key.code = Char "[" then
-          (current_mode:= Mode.Name.Normal;
+          (status.set_mode Mode.Name.Normal;
           Accept (
             Vi [Motion ((Left 1), 1); ChangeMode Normal]
             , tl
-            , !default_resolver_normal))
+            , status.resolver_normal))
         else if key.code = Escape then
-          (current_mode:= Mode.Name.Normal;
+          (status.set_mode Mode.Name.Normal;
           Accept (
             Vi [Motion ((Left 1), 1); ChangeMode Normal]
             , tl
-            , !default_resolver_normal))
+            , status.resolver_normal))
         else
           Accept (
             Bypass [key]
             , tl
-            , !default_resolver_insert)
+            , status.resolver_insert)
 
     module Normal = struct
-      let try_count continuation keyseq=
+      let try_count continuation _status keyseq=
         let get_count numseq=
           match numseq with
           | ""-> None
@@ -58,7 +66,7 @@ struct
           let resolver= continuation count in
           Continue (resolver, keyseq)
         in
-        let rec other_num numseq keyseq=
+        let rec other_num numseq _status keyseq=
           match keyseq with
           | []-> Rejected keyseq
           | key::tl->
@@ -95,8 +103,8 @@ struct
         in
         first_num ()
 
-      let try_motion ?(count=1) keyseq=
-        let try_motion_n num keyseq=
+      let try_motion ?(count=1)=
+        let try_motion_n num status keyseq=
           let num= match num with
             | Some n-> n
             | None-> 1
@@ -109,128 +117,140 @@ struct
               | Char "h"-> Accept (
                   Vi [Motion ((Left num), count)]
                   , tl
-                  , !default_resolver_normal)
+                  , status.resolver_normal)
               | Char "l"-> Accept (
                   Vi [Motion ((Right num), count)]
                   , tl
-                  , !default_resolver_normal)
+                  , status.resolver_normal)
               | Char "j"-> Accept (
                   Vi [Motion ((Downward num), count)]
                   , tl
-                  , !default_resolver_normal)
+                  , status.resolver_normal)
               | Char "k"-> Accept (
                   Vi [Motion ((Upward num), count)]
                   , tl
-                  , !default_resolver_normal)
+                  , status.resolver_normal)
               | Char "0"-> Accept (
                   Vi [Motion ((Line_FirstChar num), count)]
                   , tl
-                  , !default_resolver_normal)
+                  , status.resolver_normal)
               | Char "$"-> Accept (
                   Vi [Motion ((Line_LastChar num), count)]
                   , tl
-                  , !default_resolver_normal)
+                  , status.resolver_normal)
               | Char "w"-> Accept (
                   Vi [Motion ((Word num), count)]
                   , tl
-                  , !default_resolver_normal)
+                  , status.resolver_normal)
               | Char "b"-> Accept (
                   Vi [Motion ((Word_back num), count)]
                   , tl
-                  , !default_resolver_normal)
+                  , status.resolver_normal)
               | _-> Rejected keyseq
             else
-              Accept (Bypass [key], tl, !default_resolver_normal)
+              Accept (Bypass [key], tl, status.resolver_normal)
         in
-        try_count try_motion_n keyseq
+        try_count try_motion_n
 
-      let try_change_mode keyseq=
+      let try_change_mode status keyseq=
         match keyseq with
         | []-> Rejected []
         | key::tl->
           if not (key.Key.control || key.Key.meta || key.Key.shift) then
             match key.Key.code with
             | Char "i"->
-              (current_mode:= Mode.Name.Insert;
+              (status.set_mode Mode.Name.Insert;
               Accept (
                 Vi [ChangeMode Insert]
                 , tl
-                , !default_resolver_insert))
+                , status.resolver_insert))
             | Char "I"->
-              (current_mode:= Mode.Name.Insert;
+              (status.set_mode Mode.Name.Insert;
               Accept (
                 Vi [
                   Motion (Line_FirstNonBlank 1, 1);
                   ChangeMode Insert]
                 , tl
-                , !default_resolver_insert))
+                , status.resolver_insert))
             | Char "a"->
-              (current_mode:= Mode.Name.Insert;
+              (status.set_mode Mode.Name.Insert;
               Accept (
                 Vi [
                   Motion (Right 1, 1);
                   ChangeMode Insert]
                 , tl
-                , !default_resolver_insert))
+                , status.resolver_insert))
             | Char "A"->
-              (current_mode:= Mode.Name.Insert;
+              (status.set_mode Mode.Name.Insert;
               Accept (
                 Vi [
                   Motion (Line_LastChar 1, 1);
                   ChangeMode Insert]
                 , tl
-                , !default_resolver_insert))
+                , status.resolver_insert))
             | _-> Rejected keyseq
           else
             Rejected keyseq
 
-      let try_action count keyseq=
+      let try_action count status keyseq=
         match keyseq with
         | []-> Rejected []
         | _->
-          match try_change_mode keyseq with
-          | Rejected keyseq-> try_motion ?count keyseq
+          match try_change_mode status keyseq with
+          | Rejected keyseq-> try_motion ?count status keyseq
           | r-> r
     end
 
-    let set_mode= function
-      | Mode.Name.Insert-> current_mode:= Mode.Name.Insert
-      | _-> current_mode:= Mode.Name.Normal
+    let make_status
+        ?(mode= Mode.Name.Insert)
+        ?(keyseq=[])
+        ?(resolver_insert=resolver_insert)
+        ?(resolver_normal= Normal.try_count Normal.try_action)
+        ?(resolver_command=resolver_dummy)
+        ()
+      =
+      let mode, set_mode= React.S.create mode in
+      let keyseq, set_keyseq= React.S.create keyseq in
+      {
+        mode;
+        set_mode;
+        keyseq;
+        set_keyseq;
+        resolver_insert;
+        resolver_normal;
+        resolver_command;
+      }
 
-    let ()=
-      set_mode Mode.Name.Normal;
-      default_resolver_insert:= resolver_insert;
-      default_resolver_normal:= Normal.try_count Normal.try_action
+    let rec interpret
+      ?resolver ?(keyseq=[])
+      status
+      (keyIn: Modal.Key.t MsgBox.t) (action: Edit_action.t MsgBox.t) ()
+      =
+      let resolver=
+        match resolver with
+        | Some resolver-> resolver
+        | None-> match S.value status.mode with
+          | Mode.Name.Insert-> status.resolver_insert
+          | _-> status.resolver_normal
+      in
+      (match keyseq with
+      | []-> MsgBox.get keyIn >>= fun key-> Thread.return [key]
+      | _-> Thread.return keyseq)
+      >>= fun keyseq->
+        match resolver status keyseq with
+        | Accept (edit, keyseq, resolver)->
+          MsgBox.put action edit >>= fun ()->
+          interpret status ~resolver ~keyseq keyIn action ()
+        | Continue (resolver, keyseq)->
+          interpret status ~resolver ~keyseq keyIn action ()
+        | Rejected _keyseq->
+          let resolver=
+            match S.value status.mode with
+            | Mode.Name.Insert-> status.resolver_insert
+            | _-> status.resolver_normal
+          in
+          MsgBox.put action Dummy >>= fun ()->
+          interpret status ~resolver keyIn action ()
   end
-
-  let rec interpret
-    ?resolver ?(keyseq=[])
-    (keyIn: Modal.Key.t MsgBox.t) (action: Edit_action.t MsgBox.t) ()
-    =
-    let resolver=
-      match resolver with
-      | Some resolver-> resolver
-      | None-> match !Resolver.current_mode with
-        | Mode.Name.Insert-> !Resolver.default_resolver_insert
-        | _-> !Resolver.default_resolver_normal
-    in
-    (match keyseq with
-    | []-> MsgBox.get keyIn >>= fun key-> Thread.return [key]
-    | _-> Thread.return keyseq)
-    >>= fun keyseq->
-      match resolver keyseq with
-      | Accept (edit, keyseq, resolver)->
-        MsgBox.put action edit >>= fun ()->
-        interpret ~resolver ~keyseq keyIn action ()
-      | Continue (resolver, keyseq)->
-        interpret ~resolver ~keyseq keyIn action ()
-      | Rejected _keyseq->
-        let resolver=
-          match !Resolver.current_mode with
-          | Mode.Name.Insert-> !Resolver.default_resolver_insert
-          | _-> !Resolver.default_resolver_normal
-        in
-        MsgBox.put action Dummy >>= fun ()->
-        interpret ~resolver keyIn action ()
 end
 

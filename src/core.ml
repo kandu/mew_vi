@@ -14,8 +14,10 @@ struct
 
     method action_output= action_output
 
+    val status= Interpret.Resolver.make_status ()
+
     initializer
-      Concurrent.Thread.async (Interpret.interpret o action_output)
+      Concurrent.Thread.async (Interpret.Resolver.interpret status o action_output)
   end
 
   class state=
