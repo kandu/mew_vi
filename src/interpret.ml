@@ -197,14 +197,73 @@ struct
           else
             Rejected keyseq
 
-      let try_modify _count=
-        let try_modify_n _num _status keyseq=
+      let try_modify count=
+        let count=
+          match count with
+          | Some count-> count
+          | None->1
+        in
+        let try_motion_n ?(change=false) count num _status keyseq=
+          let num= match num with
+            | Some n-> n
+            | None-> 1
+          and next_mode=
+            if change
+            then Mode.Name.Insert
+            else Mode.Name.Normal
+          in
+          let make_actions tl action=
+            let actions=
+              action ::
+              if change then [ChangeMode Mode.Name.Insert]
+              else []
+            in
+            Accept (
+              Vi actions
+              , tl
+              , next_mode)
+          in
           match keyseq with
           | []-> Rejected []
           | key::tl->
+            if not (key.Key.control || key.Key.meta || key.Key.shift) then
+              match key.Key.code with
+              | Char "h"-> make_actions tl
+                  @@ Delete ((Left num), count)
+              | Char "l"-> make_actions tl
+                  @@ Delete ((Right num), count)
+              | Char "j"-> make_actions tl
+                  @@ Delete ((Downward num), count)
+              | Char "k"-> make_actions tl
+                  @@ Delete ((Upward num), count)
+              | Char "0"-> make_actions tl
+                  @@ Delete ((Line_FirstChar num), count)
+              | Char "$"-> make_actions tl
+                  @@ Delete ((Line_LastChar num), count)
+              | Char "w"-> make_actions tl
+                  @@ Delete ((Word num), count)
+              | Char "b"-> make_actions tl
+                  @@ Delete ((Word_back num), count)
+              | _-> Rejected keyseq
+            else
               Accept (Bypass [key], tl, Mode.Name.Normal)
         in
-        try_count try_modify_n
+        let determin count status keyseq=
+          match keyseq with
+          | []-> Rejected []
+          | key::tl->
+            if not (key.Key.control || key.Key.meta || key.Key.shift) then
+              match key.Key.code with
+              | Char "d"->
+                try_count (try_motion_n count) status tl
+              | Char "c"->
+                let change= true in
+                try_count (try_motion_n ~change count) status tl
+              | _-> Rejected keyseq
+            else
+              Accept (Bypass [key], tl, Mode.Name.Normal)
+        in
+        determin count
 
       let resolver_normal status keyseq=
         match keyseq with
