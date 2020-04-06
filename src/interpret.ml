@@ -248,6 +248,20 @@ struct
               , tl
               , next_mode)
           in
+          let try_motion_g count num _status keyseq=
+            match keyseq with
+            | []-> Rejected []
+            | key::tl->
+              if not (key.Key.control || key.Key.meta || key.Key.shift) then
+                match key.Key.code with
+                | Char "e"-> make_actions tl
+                    @@ Delete ((Word_back_end num), count)
+                | Char "E"-> make_actions tl
+                    @@ Delete ((WORD_back_end num), count)
+                | _-> Rejected keyseq
+              else
+                Accept (Bypass [key], tl, Mode.Name.Normal)
+          in
           match keyseq with
           | []-> Rejected []
           | key::tl->
@@ -269,6 +283,11 @@ struct
                   @@ Delete ((Word num), count)
               | Char "b"-> make_actions tl
                   @@ Delete ((Word_back num), count)
+              | Char "e"-> make_actions tl
+                  @@ Delete ((Word_end num), count)
+              | Char "g"->
+                let resolver= try_motion_g count num in
+                Continue (resolver, tl)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
