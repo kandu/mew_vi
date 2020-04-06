@@ -176,7 +176,7 @@ struct
               (status.set_mode Mode.Name.Insert;
               Accept (
                 Vi [
-                  Motion (Right 1, 1);
+                  Motion (Right_nl 1, 1);
                   ChangeMode Insert]
                 , tl
                 , status.resolver_insert))

@@ -10,6 +10,7 @@ type motion=
   (* left right *)
   | Left of int (* h *)
   | Right of int (* l *)
+  | Right_nl of int (* l, including newline *)
   | Line_FirstChar of int (* 0 *)
   | Line_FirstNonBlank of int (* ^ *)
   | Line_LastChar of int (* $ *)
