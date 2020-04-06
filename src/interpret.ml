@@ -54,17 +54,12 @@ struct
             , Mode.Name.Insert)
 
     module Normal = struct
-      let try_count continuation _status keyseq=
+      let try_count continuation status keyseq=
         let get_count numseq=
           match numseq with
           | ""-> None
           | _-> Some (int_of_string numseq)
 
-        in
-        let continue numseq keyseq=
-          let count= numseq |> get_count in
-          let resolver= continuation count in
-          Continue (resolver, keyseq)
         in
         let rec other_num numseq _status keyseq=
           match keyseq with
@@ -76,12 +71,12 @@ struct
                 && not (key.Key.control || key.Key.meta || key.Key.shift)
               then
                 let resolver= other_num (numseq ^ code) in
-                Continue (resolver , tl)
+                Continue (resolver, tl)
               else
-                continue numseq keyseq
+                continuation (get_count numseq) status keyseq
             | Escape-> Rejected tl
             | _->
-              continue numseq keyseq
+              continuation (get_count numseq) status keyseq
         in
         let first_num ()=
           match keyseq with
@@ -94,12 +89,12 @@ struct
                   let resolver= other_num code in
                   Continue (resolver, tl)
                 else
-                  continue "" keyseq
+                  continuation (get_count "") status keyseq
               else
-                continue "" keyseq
+                continuation (get_count "") status keyseq
             | Escape-> Rejected tl
             | _->
-              continue "" keyseq
+              continuation (get_count "") status keyseq
         in
         first_num ()
 
@@ -292,22 +287,31 @@ struct
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
         in
-        let determin count status keyseq=
+        let determin count _status keyseq=
           match keyseq with
           | []-> Rejected []
           | key::tl->
             if not (key.Key.control || key.Key.meta || key.Key.shift) then
               match key.Key.code with
               | Char "d"->
-                try_count (try_motion_n count) status tl
+                let resolver= try_count (try_motion_n count) in
+                Continue (resolver, tl)
               | Char "c"->
                 let change= true in
-                try_count (try_motion_n ~change count) status tl
+                let resolver= try_count (try_motion_n ~change count) in
+                Continue (resolver, tl)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
         in
         determin count
+
+      let try_motion_modify count status keyseq=
+        match try_motion count status keyseq with
+        | Rejected keyseq->
+          let resolver= try_modify count in
+          Continue (resolver, keyseq)
+        | r-> r
 
       let resolver_normal status keyseq=
         match keyseq with
@@ -315,9 +319,7 @@ struct
         | _->
           match try_change_mode status keyseq with
           | Rejected keyseq->
-            (match try_count try_motion status keyseq with
-            | Rejected keyseq-> try_count try_modify status keyseq
-            | r-> r)
+            try_count try_motion_modify status keyseq
           | r-> r
 
     end
@@ -362,21 +364,12 @@ struct
         | Accept (edit, keyseq, next_mode)->
           status.set_mode next_mode;
           MsgBox.put action edit >>= fun ()->
-          let resolver= match next_mode with
-            | Mode.Name.Insert-> status.resolver_insert
-            | _-> status.resolver_normal
-          in
-          interpret status ~resolver ~keyseq keyIn action ()
+          interpret status ~keyseq keyIn action ()
         | Continue (resolver, keyseq)->
           interpret status ~resolver ~keyseq keyIn action ()
         | Rejected _keyseq->
-          let resolver=
-            match S.value status.mode with
-            | Mode.Name.Insert-> status.resolver_insert
-            | _-> status.resolver_normal
-          in
           MsgBox.put action Dummy >>= fun ()->
-          interpret status ~resolver keyIn action ()
+          interpret status keyIn action ()
   end
 end
 
