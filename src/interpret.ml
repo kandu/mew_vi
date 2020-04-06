@@ -103,7 +103,12 @@ struct
         in
         first_num ()
 
-      let try_motion ?(count=1)=
+      let try_motion count=
+        let count=
+          match count with
+          | Some count-> count
+          | None-> 1
+        in
         let try_motion_n num status keyseq=
           let num= match num with
             | Some n-> n
@@ -192,21 +197,34 @@ struct
           else
             Rejected keyseq
 
-      let try_action count status keyseq=
+      let try_modify _count=
+        let try_motion_n _num status keyseq=
+          match keyseq with
+          | []-> Rejected []
+          | key::tl->
+              Accept (Bypass [key], tl, status.resolver_normal)
+        in
+        try_count try_motion_n
+
+      let resolver_normal status keyseq=
         match keyseq with
         | []-> Rejected []
         | _->
           match try_change_mode status keyseq with
-          | Rejected keyseq-> try_motion ?count status keyseq
+          | Rejected keyseq->
+            (match try_count try_motion status keyseq with
+            | Rejected keyseq-> try_count try_modify status keyseq
+            | r-> r)
           | r-> r
+
     end
 
     let make_status
         ?(mode= Mode.Name.Insert)
         ?(keyseq=[])
-        ?(resolver_insert=resolver_insert)
-        ?(resolver_normal= Normal.try_count Normal.try_action)
-        ?(resolver_command=resolver_dummy)
+        ?(resolver_insert= resolver_insert)
+        ?(resolver_normal= Normal.resolver_normal)
+        ?(resolver_command= resolver_dummy)
         ()
       =
       let mode, set_mode= React.S.create mode in
