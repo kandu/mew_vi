@@ -175,7 +175,7 @@ struct
                   , Mode.Name.Normal)
               | Char "g"->
                 let resolver= try_motion_g count num in
-                Continue (resolver, keyseq)
+                Continue (resolver, tl)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
