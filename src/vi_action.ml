@@ -14,7 +14,9 @@ type motion=
   | Line_FirstChar of int (* 0 *)
   | Line_FirstNonBlank of int (* ^ *)
   | Line_LastChar of int (* $ *)
+  | Line_LastChar_nl of int (* $ *)
   | Line_LastNonBlank of int (* g_ *)
+  | Line_LastNonBlank_nl of int (* g_ *)
 
   (* up down *)
   | Upward of int (* k *)

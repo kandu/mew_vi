@@ -184,7 +184,7 @@ struct
               (status.set_mode Mode.Name.Insert;
               Accept (
                 Vi [
-                  Motion (Line_LastChar 1, 1);
+                  Motion (Line_LastChar_nl 1, 1);
                   ChangeMode Insert]
                 , tl
                 , status.resolver_insert))
