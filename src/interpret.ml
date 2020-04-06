@@ -343,6 +343,10 @@ struct
         | Accept (edit, keyseq, next_mode)->
           status.set_mode next_mode;
           MsgBox.put action edit >>= fun ()->
+          let resolver= match next_mode with
+            | Mode.Name.Insert-> status.resolver_insert
+            | _-> status.resolver_normal
+          in
           interpret status ~resolver ~keyseq keyIn action ()
         | Continue (resolver, keyseq)->
           interpret status ~resolver ~keyseq keyIn action ()
