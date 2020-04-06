@@ -109,6 +109,24 @@ struct
           | Some count-> count
           | None-> 1
         in
+        let try_motion_g count num _status keyseq=
+          match keyseq with
+          | []-> Rejected []
+          | key::tl->
+            if not (key.Key.control || key.Key.meta || key.Key.shift) then
+              match key.Key.code with
+              | Char "e"-> Accept (
+                  Vi [Motion ((Word_back_end num), count)]
+                  , tl
+                  , Mode.Name.Normal)
+              | Char "E"-> Accept (
+                  Vi [Motion ((WORD_back_end num), count)]
+                  , tl
+                  , Mode.Name.Normal)
+              | _-> Rejected keyseq
+            else
+              Accept (Bypass [key], tl, Mode.Name.Normal)
+        in
         let try_motion_n num _status keyseq=
           let num= match num with
             | Some n-> n
@@ -151,6 +169,13 @@ struct
                   Vi [Motion ((Word_back num), count)]
                   , tl
                   , Mode.Name.Normal)
+              | Char "e"-> Accept (
+                  Vi [Motion ((Word_end num), count)]
+                  , tl
+                  , Mode.Name.Normal)
+              | Char "g"->
+                let resolver= try_motion_g count num in
+                Continue (resolver, keyseq)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
