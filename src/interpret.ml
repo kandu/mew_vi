@@ -118,6 +118,10 @@ struct
                   Vi [Motion ((WORD_back_end num), count)]
                   , tl
                   , Mode.Name.Normal)
+              | Char "g"-> Accept (
+                  Vi [Motion (GotoLine_first, count)]
+                  , tl
+                  , Mode.Name.Normal)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
@@ -166,6 +170,10 @@ struct
                   , Mode.Name.Normal)
               | Char "e"-> Accept (
                   Vi [Motion ((Word_end num), count)]
+                  , tl
+                  , Mode.Name.Normal)
+              | Char "G"-> Accept (
+                  Vi [Motion (GotoLine_last, count)]
                   , tl
                   , Mode.Name.Normal)
               | Char "g"->
