@@ -238,13 +238,8 @@ struct
               then Change (motion, count)
               else Delete (motion, count)
             in
-            let actions=
-              action ::
-              if change then [ChangeMode Mode.Name.Insert]
-              else []
-            in
             Accept (
-              Vi actions
+              Vi [action]
               , tl
               , next_mode)
           in
