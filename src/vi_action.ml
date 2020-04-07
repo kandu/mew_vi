@@ -35,6 +35,8 @@ type motion=
   | Word_back_end of int (* ge *)
   | WORD_back_end of int (* gE *)
 
+  | Line
+
   (* text object *)
   | Sentence_backword of int (* ( *)
   | Sentence_forward of int (* ) *)

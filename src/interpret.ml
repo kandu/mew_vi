@@ -223,7 +223,10 @@ struct
           | Some count-> count
           | None->1
         in
-        let try_motion_n ?(change=false) count num _status keyseq=
+        let try_motion_n ?(change=false)
+            ?(d=false)
+            count num _status keyseq
+          =
           let num= match num with
             | Some n-> n
             | None-> 1
@@ -272,7 +275,11 @@ struct
               | Char "g"->
                 let resolver= try_motion_g count num in
                 Continue (resolver, tl)
-              | _-> Rejected keyseq
+              | Char "d"-> if d then
+                  make_actions tl Line count
+                else Rejected keyseq
+              | _->
+                Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
         in
@@ -283,7 +290,7 @@ struct
             if not (key.Key.control || key.Key.meta || key.Key.shift) then
               match key.Key.code with
               | Char "d"->
-                let resolver= try_count (try_motion_n count) in
+                let resolver= try_count (try_motion_n ~d:true count) in
                 Continue (resolver, tl)
               | Char "c"->
                 let change= true in
