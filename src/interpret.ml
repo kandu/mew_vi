@@ -271,6 +271,7 @@ struct
           | key::tl->
             if not (key.Key.control || key.Key.meta || key.Key.shift) then
               match key.Key.code with
+              | Char "u"-> Accept (Vi [Undo count], tl, Mode.Name.Normal)
               | Char "h"-> make_actions tl (Left num) count
               | Char "l"-> make_actions tl (Right num) count
               | Char "j"-> make_actions tl (Downward num) count

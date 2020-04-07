@@ -58,5 +58,6 @@ type t=
   | Motion of motion * int
   | Delete of motion * int
   | Change of motion * int
+  | Undo of int
   | ChangeMode of Mode.Name.t
 
