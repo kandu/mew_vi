@@ -300,6 +300,16 @@ struct
                 let change= true in
                 let resolver= try_count (try_motion_n ~change count) in
                 Continue (resolver, tl)
+              | Char "x"->
+                Accept (
+                  Vi [Delete ((Right 1), count)]
+                  , tl
+                  , Mode.Name.Normal)
+              | Char "s"->
+                Accept (
+                  Vi [Delete ((Right 1), count)]
+                  , tl
+                  , Mode.Name.Insert)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
