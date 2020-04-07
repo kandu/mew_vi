@@ -55,5 +55,6 @@ type t=
   | Insert of insert * int
   | Motion of motion * int
   | Delete of motion * int
+  | Change of motion * int
   | ChangeMode of Mode.Name.t
 

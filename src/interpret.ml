@@ -232,7 +232,12 @@ struct
             then Mode.Name.Insert
             else Mode.Name.Normal
           in
-          let make_actions tl action=
+          let make_actions tl motion count=
+            let action=
+              if change
+              then Change (motion, count)
+              else Delete (motion, count)
+            in
             let actions=
               action ::
               if change then [ChangeMode Mode.Name.Insert]
@@ -249,10 +254,8 @@ struct
             | key::tl->
               if not (key.Key.control || key.Key.meta || key.Key.shift) then
                 match key.Key.code with
-                | Char "e"-> make_actions tl
-                    @@ Delete ((Word_back_end num), count)
-                | Char "E"-> make_actions tl
-                    @@ Delete ((WORD_back_end num), count)
+                | Char "e"-> make_actions tl (Word_back_end num) count
+                | Char "E"-> make_actions tl (WORD_back_end num) count
                 | _-> Rejected keyseq
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
@@ -262,24 +265,15 @@ struct
           | key::tl->
             if not (key.Key.control || key.Key.meta || key.Key.shift) then
               match key.Key.code with
-              | Char "h"-> make_actions tl
-                  @@ Delete ((Left num), count)
-              | Char "l"-> make_actions tl
-                  @@ Delete ((Right num), count)
-              | Char "j"-> make_actions tl
-                  @@ Delete ((Downward num), count)
-              | Char "k"-> make_actions tl
-                  @@ Delete ((Upward num), count)
-              | Char "0"-> make_actions tl
-                  @@ Delete ((Line_FirstChar num), count)
-              | Char "$"-> make_actions tl
-                  @@ Delete ((Line_LastChar num), count)
-              | Char "w"-> make_actions tl
-                  @@ Delete ((Word num), count)
-              | Char "b"-> make_actions tl
-                  @@ Delete ((Word_back num), count)
-              | Char "e"-> make_actions tl
-                  @@ Delete ((Word_end num), count)
+              | Char "h"-> make_actions tl (Left num) count
+              | Char "l"-> make_actions tl (Right num) count
+              | Char "j"-> make_actions tl (Downward num) count
+              | Char "k"-> make_actions tl (Upward num) count
+              | Char "0"-> make_actions tl (Line_FirstChar num) count
+              | Char "$"-> make_actions tl (Line_LastChar num) count
+              | Char "w"-> make_actions tl (Word num) count
+              | Char "b"-> make_actions tl (Word_back num) count
+              | Char "e"-> make_actions tl (Word_end num) count
               | Char "g"->
                 let resolver= try_motion_g count num in
                 Continue (resolver, tl)
