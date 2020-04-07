@@ -312,10 +312,39 @@ struct
         in
         determin count
 
-      let try_motion_modify count status keyseq=
+      let try_insert count _status keyseq=
+        let count=
+          match count with
+          | Some count-> count
+          | None-> 1
+        in
+        match keyseq with
+        | []-> Rejected []
+        | key::tl->
+          if not (key.Key.control || key.Key.meta || key.Key.shift) then
+            match key.Key.code with
+            | Char "o"-> Accept (
+                Vi [Insert ((Newline_below ""), count)]
+                , tl
+                , Mode.Name.Insert)
+            | Char "O"-> Accept (
+                Vi [Insert ((Newline_above ""), count)]
+                , tl
+                , Mode.Name.Insert)
+            | _-> Rejected keyseq
+          else
+            Accept (Bypass [key], tl, Mode.Name.Normal)
+
+      let try_motion_modify_insert count status keyseq=
         match try_motion count status keyseq with
         | Rejected keyseq->
-          let resolver= try_modify count in
+          let resolver status keyseq=
+            match try_modify count status keyseq with
+            | Rejected keyseq->
+              let resolver= try_insert count in
+              Continue (resolver, keyseq)
+            | r-> r
+          in
           Continue (resolver, keyseq)
         | r-> r
 
@@ -325,7 +354,7 @@ struct
         | _->
           match try_change_mode status keyseq with
           | Rejected keyseq->
-            try_count try_motion_modify status keyseq
+            try_count try_motion_modify_insert status keyseq
           | r-> r
 
     end
