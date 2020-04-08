@@ -59,5 +59,6 @@ type t=
   | Delete of motion * int
   | Change of motion * int
   | Undo of int
+  | Paste of int
   | ChangeMode of Mode.Name.t
 

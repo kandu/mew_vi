@@ -298,6 +298,7 @@ struct
             if not (key.Key.control || key.Key.meta || key.Key.shift) then
               match key.Key.code with
               | Char "u"-> Accept (Vi [Undo count], tl, Mode.Name.Normal)
+              | Char "p"-> Accept (Vi [Paste count], tl, Mode.Name.Normal)
               | Char "d"->
                 let resolver= try_count (try_motion_n ~d:true count) in
                 Continue (resolver, tl)
