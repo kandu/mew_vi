@@ -231,7 +231,8 @@ struct
           | Some count-> count
           | None->1
         in
-        let try_motion_n ?(change=false)
+        let try_motion_n
+            ?(change=false)
             ?(d=false)
             count num _status keyseq
           =
@@ -408,13 +409,13 @@ struct
         match resolver status keyseq with
         | Accept (edit, keyseq, next_mode)->
           status.set_mode next_mode;
-          MsgBox.put action edit >>= fun ()->
-          interpret status ~keyseq keyIn action ()
+          MsgBox.put action edit >>=
+          interpret status ~keyseq keyIn action
         | Continue (resolver, keyseq)->
           interpret status ~resolver ~keyseq keyIn action ()
         | Rejected _keyseq->
-          MsgBox.put action Dummy >>= fun ()->
-          interpret status keyIn action ()
+          MsgBox.put action Dummy >>=
+          interpret status keyIn action
   end
 end
 
