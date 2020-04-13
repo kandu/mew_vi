@@ -1,3 +1,13 @@
+(*
+ * interpret.ml
+ * -----------
+ * Copyright : (c) 2019 - 2020, ZAN DoYe <zandoye@gmail.com>
+ * Licence   : MIT
+ *
+ * This file is a part of mew_vi.
+ *)
+
+
 open Vi_action
 open Edit_action
 open React
