@@ -7,14 +7,11 @@ license: "MIT"
 dev-repo: "git+https://github.com/kandu/mew_vi.git"
 build: [
   ["dune" "build" "-p" name "-j" jobs]
-  ["dune" "runtest" "-p" name "-j" jobs] {with-test & (ocaml:version >= "4.04.0")}
 ]
 depends: [
-  "ocaml" {>= "4.03.0"}
-  "camomile"
+  "ocaml" {>= "4.02.3"}
   "mew"
-  "dune" {build}
-  "ppx_expect" {with-test}
+  "dune" {>= "1.1.0"}
 ]
 
 synopsis: "Modal editing witch, VI interpreter"
