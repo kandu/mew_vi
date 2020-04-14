@@ -10,5 +10,5 @@
 
 module Key = Key
 module Name = Mode.Name
-module Mode = Mode
+module Mode = Mew.Mode.Make(Key)(Name)
 
