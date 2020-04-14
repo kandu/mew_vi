@@ -310,6 +310,7 @@ struct
               match key.Key.code with
               | Char "u"-> Accept (Vi [Undo count], tl, Mode.Name.Normal)
               | Char "p"-> Accept (Vi [Paste count], tl, Mode.Name.Normal)
+              | Char "P"-> Accept (Vi [Motion ((Left 1), 1); Paste count], tl, Mode.Name.Normal)
               | Char "d"->
                 let resolver= try_count (try_motion_n ~d:true count) in
                 Continue (resolver, tl)
