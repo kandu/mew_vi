@@ -16,4 +16,4 @@ depends: [
 
 synopsis: "Modal editing witch, VI interpreter"
 description: """
-"""
+A vi-like modal editing engine generator."""
