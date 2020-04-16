@@ -174,12 +174,24 @@ struct
                   Vi [Motion ((Word num), count)]
                   , tl
                   , Mode.Name.Normal)
+              | Char "W"-> Accept (
+                  Vi [Motion ((WORD num), count)]
+                  , tl
+                  , Mode.Name.Normal)
               | Char "b"-> Accept (
                   Vi [Motion ((Word_back num), count)]
                   , tl
                   , Mode.Name.Normal)
+              | Char "B"-> Accept (
+                  Vi [Motion ((WORD_back num), count)]
+                  , tl
+                  , Mode.Name.Normal)
               | Char "e"-> Accept (
                   Vi [Motion ((Word_end num), count)]
+                  , tl
+                  , Mode.Name.Normal)
+              | Char "E"-> Accept (
+                  Vi [Motion ((WORD_end num), count)]
                   , tl
                   , Mode.Name.Normal)
               | Char "G"-> Accept (
@@ -289,8 +301,11 @@ struct
               | Char "0"-> make_actions tl (Line_FirstChar num) count
               | Char "$"-> make_actions tl (Line_LastChar num) count
               | Char "w"-> make_actions tl (Word num) count
+              | Char "W"-> make_actions tl (WORD num) count
               | Char "b"-> make_actions tl (Word_back num) count
+              | Char "B"-> make_actions tl (WORD_back num) count
               | Char "e"-> make_actions tl (Word_end num) count
+              | Char "E"-> make_actions tl (WORD_end num) count
               | Char "g"->
                 let resolver= try_motion_g count num in
                 Continue (resolver, tl)
