@@ -289,6 +289,31 @@ struct
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
           in
+          let try_motion_object ?(inner=false) count num _status keyseq=
+            match keyseq with
+            | []-> Rejected []
+            | key::tl->
+              if not (key.Key.control || key.Key.meta || key.Key.shift) then
+                match key.Key.code with
+                | Char "(" | Char ")"->
+                  if inner then
+                    make_actions tl (Parenthesis_inner num) count
+                  else
+                    make_actions tl (Parenthesis_include num) count
+                | Char "[" | Char "]"->
+                  if inner then
+                    make_actions tl (Bracket_inner num) count
+                  else
+                    make_actions tl (Bracket_include num) count
+                | Char "<" | Char ">"->
+                  if inner then
+                    make_actions tl (AngleBracket_inner num) count
+                  else
+                    make_actions tl (AngleBracket_include num) count
+                | _-> Rejected keyseq
+              else
+                Accept (Bypass [key], tl, Mode.Name.Normal)
+          in
           match keyseq with
           | []-> Rejected []
           | key::tl->
@@ -312,6 +337,13 @@ struct
               | Char "d"-> if d then
                   make_actions tl Line count
                 else Rejected keyseq
+              | Char "a"->
+                let resolver= try_motion_object count num in
+                Continue (resolver, tl)
+              | Char "i"->
+                let inner= true in
+                let resolver= try_motion_object ~inner count num in
+                Continue (resolver, tl)
               | _->
                 Rejected keyseq
             else
