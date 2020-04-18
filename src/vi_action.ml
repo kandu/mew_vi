@@ -62,6 +62,12 @@ type motion=
   | Sentence_inner of int (* is *)
   | Paragraph_include of int (* ap *)
   | Paragraph_inner of int (* ip *)
+  | Parenthesis_include of int (* a( a) *)
+  | Parenthesis_inner of int (* i( i) *)
+  | Bracket_include of int (* a[ a] *)
+  | Bracket_inner of int (* i[ i] *)
+  | AngleBracket_include of int (* a< a> *)
+  | AngleBracket_inner of int (* i< i> *)
 
 type t=
   | Insert of insert * int
