@@ -136,6 +136,27 @@ struct
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
         in
+        let try_motion_occurence ?(backward=false) count num _status keyseq=
+          match keyseq with
+          | []-> Rejected []
+          | key::tl->
+            if not (key.Key.control || key.Key.meta || key.Key.shift) then
+              match key.Key.code with
+              | Char chr->
+                if backward then
+                  Accept (
+                    Vi [Motion (Occurrence_inline_back chr, count*num)]
+                    , tl
+                    , Mode.Name.Normal)
+                else
+                  Accept (
+                    Vi [Motion (Occurrence_inline chr, count*num)]
+                    , tl
+                    , Mode.Name.Normal)
+              | _-> Rejected keyseq
+            else
+              Accept (Bypass [key], tl, Mode.Name.Normal)
+        in
         let try_motion_n num _status keyseq=
           let num= match num with
             | Some n-> n
@@ -200,6 +221,13 @@ struct
                   , Mode.Name.Normal)
               | Char "g"->
                 let resolver= try_motion_g count num in
+                Continue (resolver, tl)
+              | Char "f"->
+                let resolver= try_motion_occurence count num in
+                Continue (resolver, tl)
+              | Char "F"->
+                let backward= true in
+                let resolver= try_motion_occurence ~backward count num in
                 Continue (resolver, tl)
               | _-> Rejected keyseq
             else
@@ -314,6 +342,24 @@ struct
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
           in
+          let try_motion_occurence ?(backward=false) count num _status keyseq=
+            match keyseq with
+            | []-> Rejected []
+            | key::tl->
+              if not (key.Key.control || key.Key.meta || key.Key.shift) then
+                match key.Key.code with
+                | Char chr->
+                  if backward then
+                    make_actions
+                      tl
+                      (Occurrence_inline_back chr)
+                      (count * num)
+                  else
+                    make_actions tl (Occurrence_inline chr) (count * num)
+                | _-> Rejected keyseq
+              else
+                Accept (Bypass [key], tl, Mode.Name.Normal)
+          in
           match keyseq with
           | []-> Rejected []
           | key::tl->
@@ -343,6 +389,13 @@ struct
               | Char "i"->
                 let inner= true in
                 let resolver= try_motion_object ~inner count num in
+                Continue (resolver, tl)
+              | Char "f"->
+                let resolver= try_motion_occurence count num in
+                Continue (resolver, tl)
+              | Char "F"->
+                let backward= true in
+                let resolver= try_motion_occurence ~backward count num in
                 Continue (resolver, tl)
               | _->
                 Rejected keyseq
