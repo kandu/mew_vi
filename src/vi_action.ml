@@ -45,7 +45,12 @@ type motion=
   | Word_back_end of int (* ge *)
   | WORD_back_end of int (* gE *)
 
+  (* line *)
   | Line
+
+  (* occurrence *)
+  | Occurrence_inline of string
+  | Occurrence_inline_back of string
 
   (* text object *)
   | Sentence_backword of int (* ( *)
