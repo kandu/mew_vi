@@ -338,6 +338,11 @@ struct
                     make_actions tl (AngleBracket_inner num) count
                   else
                     make_actions tl (AngleBracket_include num) count
+                | Char "{" | Char "}"->
+                  if inner then
+                    make_actions tl (Brace_inner num) count
+                  else
+                    make_actions tl (Brace_include num) count
                 | _-> Rejected keyseq
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)

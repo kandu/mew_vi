@@ -73,6 +73,8 @@ type motion=
   | Bracket_inner of int (* i[ i] *)
   | AngleBracket_include of int (* a< a> *)
   | AngleBracket_inner of int (* i< i> *)
+  | Brace_include of int (* a{ a} *)
+  | Brace_inner of int (* i{ i} *)
 
 type t=
   | Insert of insert * int
