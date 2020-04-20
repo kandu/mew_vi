@@ -76,6 +76,9 @@ type motion=
   | Brace_include of int (* a{ a} *)
   | Brace_inner of int (* i{ i} *)
 
+  (* match *)
+  | Match
+
 type t=
   | Insert of insert * int
   | Motion of motion * int

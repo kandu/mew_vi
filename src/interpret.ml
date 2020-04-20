@@ -402,6 +402,7 @@ struct
                 let backward= true in
                 let resolver= try_motion_occurence ~backward count num in
                 Continue (resolver, tl)
+              | Char "%"-> make_actions tl Match 1
               | _->
                 Rejected keyseq
             else
