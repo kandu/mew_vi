@@ -84,6 +84,7 @@ type t=
   | Motion of motion * int
   | Delete of motion * int
   | Change of motion * int
+  | Join of int
   | Undo of int
   | Paste_before of int
   | Paste_after of int

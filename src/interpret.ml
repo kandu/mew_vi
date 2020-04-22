@@ -448,6 +448,11 @@ struct
                   Vi [Delete ((Right 1), count)]
                   , tl
                   , Mode.Name.Insert)
+              | Char "J"->
+                Accept (
+                  Vi [(Join count)]
+                  , tl
+                  , Mode.Name.Normal)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
