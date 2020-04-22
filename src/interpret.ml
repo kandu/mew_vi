@@ -286,7 +286,7 @@ struct
           | None->1
         in
         let try_motion_n
-            ?(change=false)
+            ~action
             ?(d=false)
             count num _status keyseq
           =
@@ -294,15 +294,16 @@ struct
             | Some n-> n
             | None-> 1
           and next_mode=
-            if change
+            if action = `Change
             then Mode.Name.Insert
             else Mode.Name.Normal
           in
           let make_actions tl motion count=
             let action=
-              if change
-              then Change (motion, count)
-              else Delete (motion, count)
+              match action with
+              | `Change-> Change (motion, count)
+              | `Delete-> Delete (motion, count)
+              | `Yank-> Yank (motion, count)
             in
             Accept (
               Vi [action]
@@ -432,11 +433,12 @@ struct
               | Char "p"-> Accept (Vi [Paste_after count], tl, Mode.Name.Normal)
               | Char "P"-> Accept (Vi [Paste_before count], tl, Mode.Name.Normal)
               | Char "d"->
-                let resolver= try_count (try_motion_n ~d:true count) in
+                let resolver= try_count
+                  (try_motion_n ~action:`Delete ~d:true count) in
                 Continue (resolver, tl)
               | Char "c"->
-                let change= true in
-                let resolver= try_count (try_motion_n ~change count) in
+                let resolver= try_count
+                  (try_motion_n ~action:`Change count) in
                 Continue (resolver, tl)
               | Char "x"->
                 Accept (
@@ -453,6 +455,10 @@ struct
                   Vi [(Join count)]
                   , tl
                   , Mode.Name.Normal)
+              | Char "y"->
+                let resolver= try_count
+                  (try_motion_n ~action:`Yank count) in
+                Continue (resolver, tl)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
