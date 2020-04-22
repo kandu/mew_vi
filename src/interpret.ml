@@ -347,6 +347,16 @@ struct
                     make_actions tl (Brace_inner num) count
                   else
                     make_actions tl (Brace_include num) count
+                | Char "w"->
+                  if inner then
+                    make_actions tl (Word_inner num) count
+                  else
+                    make_actions tl (Word_include num) count
+                | Char "W"->
+                  if inner then
+                    make_actions tl (WORD_inner num) count
+                  else
+                    make_actions tl (WORD_include num) count
                 | _-> Rejected keyseq
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
