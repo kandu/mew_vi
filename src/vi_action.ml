@@ -87,5 +87,6 @@ type t=
   | Undo of int
   | Paste_before of int
   | Paste_after of int
+  | Yank of motion * int
   | ChangeMode of Mode.Name.t
 
