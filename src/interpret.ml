@@ -212,6 +212,10 @@ struct
                   Vi [Motion ((Line_LastChar num), count)]
                   , tl
                   , Mode.Name.Normal)
+              | Char "^"-> Accept (
+                  Vi [Motion ((Line_FirstNonBlank num), count)]
+                  , tl
+                  , Mode.Name.Normal)
               | Char "w"-> Accept (
                   Vi [Motion ((Word num), count)]
                   , tl
@@ -436,6 +440,7 @@ struct
               | Char "k"-> make_actions tl (Upward num) count
               | Char "0"-> make_actions tl (Line_FirstChar num) count
               | Char "$"-> make_actions tl (Line_LastChar num) count
+              | Char "^"-> make_actions tl (Line_FirstNonBlank num) count
               | Char "w"-> make_actions tl (Word num) count
               | Char "W"-> make_actions tl (WORD num) count
               | Char "b"-> make_actions tl (Word_back num) count
