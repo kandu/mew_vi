@@ -442,6 +442,14 @@ struct
                 let resolver= try_count
                   (try_motion_n ~action:`Change count) in
                 Continue (resolver, tl)
+              | Char "D"-> Accept (
+                  Vi [Delete ((Line_LastChar 1), count)],
+                  tl,
+                  Mode.Name.Normal)
+              | Char "C"-> Accept (
+                  Vi [Delete ((Line_LastChar 1), count)],
+                  tl,
+                  Mode.Name.Insert)
               | Char "x"->
                 Accept (
                   Vi [Delete ((Right 1), count)]
