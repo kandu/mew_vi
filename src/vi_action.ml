@@ -51,6 +51,8 @@ type motion=
   (* occurrence *)
   | Occurrence_inline of string
   | Occurrence_inline_back of string
+  | Occurrence_inline_till of string
+  | Occurrence_inline_till_back of string
 
   (* text object *)
   | Sentence_backword of int (* ( *)
