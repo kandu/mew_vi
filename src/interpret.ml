@@ -287,7 +287,6 @@ struct
         in
         let try_motion_n
             ~action
-            ?(d=false)
             count num _status keyseq
           =
           let num= match num with
@@ -400,7 +399,7 @@ struct
               | Char "g"->
                 let resolver= try_motion_g count num in
                 Continue (resolver, tl)
-              | Char "d"-> if d then
+              | Char "d"-> if action = `Delete then
                   make_actions tl Line count
                 else Rejected keyseq
               | Char "a"->
@@ -418,6 +417,9 @@ struct
                 let resolver= try_motion_occurence ~backward count num in
                 Continue (resolver, tl)
               | Char "%"-> make_actions tl Match 1
+              | Char "y"-> if action = `Yank then
+                  make_actions tl Line count
+                else Rejected keyseq
               | _->
                 Rejected keyseq
             else
@@ -434,7 +436,7 @@ struct
               | Char "P"-> Accept (Vi [Paste_before count], tl, Mode.Name.Normal)
               | Char "d"->
                 let resolver= try_count
-                  (try_motion_n ~action:`Delete ~d:true count) in
+                  (try_motion_n ~action:`Delete count) in
                 Continue (resolver, tl)
               | Char "c"->
                 let resolver= try_count
