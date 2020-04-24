@@ -394,6 +394,16 @@ struct
                     make_actions tl (Brace_inner num) count
                   else
                     make_actions tl (Brace_include num) count
+                | Char "'"->
+                  if inner then
+                    make_actions tl (Quote_inner ("'", num)) count
+                  else
+                    make_actions tl (Quote_include ("'", num)) count
+                | Char "\""->
+                  if inner then
+                    make_actions tl (Quote_inner ("\"", num)) count
+                  else
+                    make_actions tl (Quote_include ("\"", num)) count
                 | Char "w"->
                   if inner then
                     make_actions tl (Word_inner num) count
