@@ -353,6 +353,21 @@ struct
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
           in
+          let try_motion_quote ?(inner=false) count num _status keyseq=
+            match keyseq with
+            | []-> Rejected []
+            | key::tl->
+              if not (key.Key.control || key.Key.meta || key.Key.shift) then
+                match key.Key.code with
+                | Char chr->
+                  if inner then
+                    make_actions tl (Quote_inner (chr, num)) count
+                  else
+                    make_actions tl (Quote_include (chr, num)) count
+                | _-> Rejected keyseq
+              else
+                Accept (Bypass [key], tl, Mode.Name.Normal)
+          in
           let try_motion_object ?(inner=false) count num _status keyseq=
             match keyseq with
             | []-> Rejected []
@@ -389,6 +404,9 @@ struct
                     make_actions tl (WORD_inner num) count
                   else
                     make_actions tl (WORD_include num) count
+                | Char "q"->
+                  let resolver= try_motion_quote ~inner count num in
+                  Continue (resolver, tl)
                 | _-> Rejected keyseq
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)

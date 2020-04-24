@@ -77,6 +77,8 @@ type motion=
   | AngleBracket_inner of int (* i< i> *)
   | Brace_include of int (* a{ a} *)
   | Brace_inner of int (* i{ i} *)
+  | Quote_include of (string * int)
+  | Quote_inner of (string * int)
 
   (* match *)
   | Match
