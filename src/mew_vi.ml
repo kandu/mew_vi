@@ -11,4 +11,7 @@
 module Core = Core
 module Modal = Modal
 module Key = Key
+module Edit_action = Edit_action
+module Vi_action = Vi_action
+module Mode = Mode
 
