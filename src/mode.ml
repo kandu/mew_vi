@@ -11,6 +11,7 @@
 module Name = struct
   type t=
     | Normal
+    | Visual
     | Insert
     | Commandline
 

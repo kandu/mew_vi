@@ -93,5 +93,7 @@ type t=
   | Paste_before of int
   | Paste_after of int
   | Yank of motion * int
+  | DeleteSelected
+  | YankSelected
   | ChangeMode of Mode.Name.t
 

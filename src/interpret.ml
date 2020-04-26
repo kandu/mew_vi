@@ -36,6 +36,7 @@ struct
       set_keyseq: ?step:step -> keyseq -> unit;
       mutable resolver_insert: t;
       mutable resolver_normal: t;
+      mutable resolver_visual: t;
       mutable resolver_command: t;
     }
 
@@ -63,7 +64,7 @@ struct
             , tl
             , Mode.Name.Insert)
 
-    module Normal = struct
+    module Common = struct
       let try_count continuation status keyseq=
         let get_count numseq=
           match numseq with
@@ -108,7 +109,7 @@ struct
         in
         first_num ()
 
-      let try_motion count=
+      let try_motion next_mode count=
         let count=
           match count with
           | Some count-> count
@@ -123,18 +124,18 @@ struct
               | Char "e"-> Accept (
                   Vi [Motion ((Word_back_end num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "E"-> Accept (
                   Vi [Motion ((WORD_back_end num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "g"-> Accept (
                   Vi [Motion (GotoLine_first, count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | _-> Rejected keyseq
             else
-              Accept (Bypass [key], tl, Mode.Name.Normal)
+              Accept (Bypass [key], tl, next_mode)
         in
         let try_motion_occurence ?(backward=false) count num _status keyseq=
           match keyseq with
@@ -147,15 +148,15 @@ struct
                   Accept (
                     Vi [Motion (Occurrence_inline_back chr, count*num)]
                     , tl
-                    , Mode.Name.Normal)
+                    , next_mode)
                 else
                   Accept (
                     Vi [Motion (Occurrence_inline chr, count*num)]
                     , tl
-                    , Mode.Name.Normal)
+                    , next_mode)
               | _-> Rejected keyseq
             else
-              Accept (Bypass [key], tl, Mode.Name.Normal)
+              Accept (Bypass [key], tl, next_mode)
         in
         let try_motion_occurence_till ?(backward=false) count num _status keyseq=
           match keyseq with
@@ -168,15 +169,15 @@ struct
                   Accept (
                     Vi [Motion (Occurrence_inline_till_back chr, count*num)]
                     , tl
-                    , Mode.Name.Normal)
+                    , next_mode)
                 else
                   Accept (
                     Vi [Motion (Occurrence_inline_till chr, count*num)]
                     , tl
-                    , Mode.Name.Normal)
+                    , next_mode)
               | _-> Rejected keyseq
             else
-              Accept (Bypass [key], tl, Mode.Name.Normal)
+              Accept (Bypass [key], tl, next_mode)
         in
         let try_motion_n num _status keyseq=
           let num= match num with
@@ -191,59 +192,59 @@ struct
               | Char "h"-> Accept (
                   Vi [Motion ((Left num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "l"-> Accept (
                   Vi [Motion ((Right num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "j"-> Accept (
                   Vi [Motion ((Downward num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "k"-> Accept (
                   Vi [Motion ((Upward num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "0"-> Accept (
                   Vi [Motion ((Line_FirstChar num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "$"-> Accept (
                   Vi [Motion ((Line_LastChar num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "^"-> Accept (
                   Vi [Motion ((Line_FirstNonBlank num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "w"-> Accept (
                   Vi [Motion ((Word num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "W"-> Accept (
                   Vi [Motion ((WORD num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "b"-> Accept (
                   Vi [Motion ((Word_back num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "B"-> Accept (
                   Vi [Motion ((WORD_back num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "e"-> Accept (
                   Vi [Motion ((Word_end num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "E"-> Accept (
                   Vi [Motion ((WORD_end num), count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "G"-> Accept (
                   Vi [Motion (GotoLine_last, count)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | Char "g"->
                 let resolver= try_motion_g count num in
                 Continue (resolver, tl)
@@ -264,13 +265,15 @@ struct
               | Char "%"-> Accept (
                   Vi [Motion (Match, 1)]
                   , tl
-                  , Mode.Name.Normal)
+                  , next_mode)
               | _-> Rejected keyseq
             else
-              Accept (Bypass [key], tl, Mode.Name.Normal)
+              Accept (Bypass [key], tl, next_mode)
         in
         try_count try_motion_n
+    end
 
+    module Normal = struct
       let try_change_mode status keyseq=
         match keyseq with
         | []-> Rejected []
@@ -307,6 +310,12 @@ struct
                   ChangeMode Insert]
                 , tl
                 , Mode.Name.Insert))
+            | Char "v"->
+              (status.set_mode Mode.Name.Visual;
+              Accept (
+                Vi [ ChangeMode Visual]
+                , tl
+                , Mode.Name.Visual))
             | _-> Rejected keyseq
           else
             Rejected keyseq
@@ -521,11 +530,11 @@ struct
               | Char "p"-> Accept (Vi [Paste_after count], tl, Mode.Name.Normal)
               | Char "P"-> Accept (Vi [Paste_before count], tl, Mode.Name.Normal)
               | Char "d"->
-                let resolver= try_count
+                let resolver= Common.try_count
                   (try_motion_n ~action:`Delete count) in
                 Continue (resolver, tl)
               | Char "c"->
-                let resolver= try_count
+                let resolver= Common.try_count
                   (try_motion_n ~action:`Change count) in
                 Continue (resolver, tl)
               | Char "D"-> Accept (
@@ -552,7 +561,7 @@ struct
                   , tl
                   , Mode.Name.Normal)
               | Char "y"->
-                let resolver= try_count
+                let resolver= Common.try_count
                   (try_motion_n ~action:`Yank count) in
                 Continue (resolver, tl)
               | _-> Rejected keyseq
@@ -585,7 +594,7 @@ struct
             Accept (Bypass [key], tl, Mode.Name.Normal)
 
       let try_motion_modify_insert count status keyseq=
-        match try_motion count status keyseq with
+        match Common.try_motion Mode.Name.Normal count status keyseq with
         | Rejected keyseq->
           let resolver status keyseq=
             match try_modify count status keyseq with
@@ -603,7 +612,81 @@ struct
         | _->
           match try_change_mode status keyseq with
           | Rejected keyseq->
-            try_count try_motion_modify_insert status keyseq
+            Common.try_count try_motion_modify_insert status keyseq
+          | r-> r
+
+    end
+
+    module Visual = struct
+      let try_change_mode status keyseq=
+        match keyseq with
+        | []-> Rejected []
+        | key::tl->
+          if key.Key.control && key.code = Char "[" then
+            (status.set_mode Mode.Name.Normal;
+            Accept (
+              Vi [ChangeMode Normal]
+              , tl
+              , Mode.Name.Normal))
+          else if key.code = Escape then
+            (status.set_mode Mode.Name.Normal;
+            Accept (
+              Vi [ChangeMode Normal]
+              , tl
+              , Mode.Name.Normal))
+          else
+          if not (key.Key.control || key.Key.meta || key.Key.shift) then
+            match key.Key.code with
+            | Char "v"->
+              (status.set_mode Mode.Name.Normal;
+              Accept (
+                Vi [ ChangeMode Normal]
+                , tl
+                , Mode.Name.Normal))
+            | _-> Rejected keyseq
+          else
+            Rejected keyseq
+
+      let try_motion= Common.try_motion Mode.Name.Visual
+
+      let try_modify _status keyseq=
+        match keyseq with
+        | []-> Rejected []
+        | key::tl->
+          if not (key.Key.control || key.Key.meta || key.Key.shift) then
+            match key.Key.code with
+            | Char "c" | Char "s"->
+              Accept (
+                Vi [ DeleteSelected; ChangeMode Insert]
+                , tl
+                , Mode.Name.Insert)
+            | Char "d" | Char "x"->
+              Accept (
+                Vi [ DeleteSelected; ChangeMode Normal ]
+                , tl
+                , Mode.Name.Normal)
+            | Char "y"->
+              Accept (
+                Vi [ YankSelected; ChangeMode Normal ]
+                , tl
+                , Mode.Name.Normal)
+            | _-> Rejected keyseq
+          else
+            Rejected keyseq
+
+      let try_motion_modify count status keyseq=
+        match try_motion count status keyseq with
+        | Rejected keyseq->
+          Continue (try_modify, keyseq)
+        | r-> r
+
+      let resolver_visual status keyseq=
+        match keyseq with
+        | []-> Rejected []
+        | _->
+          match try_change_mode status keyseq with
+          | Rejected keyseq->
+            Common.try_count try_motion_modify status keyseq
           | r-> r
 
     end
@@ -613,6 +696,7 @@ struct
         ?(keyseq=[])
         ?(resolver_insert= resolver_insert)
         ?(resolver_normal= Normal.resolver_normal)
+        ?(resolver_visual= Visual.resolver_visual)
         ?(resolver_command= resolver_dummy)
         ()
       =
@@ -625,6 +709,7 @@ struct
         set_keyseq;
         resolver_insert;
         resolver_normal;
+        resolver_visual;
         resolver_command;
       }
 
@@ -638,6 +723,7 @@ struct
         | Some resolver-> resolver
         | None-> match S.value status.mode with
           | Mode.Name.Insert-> status.resolver_insert
+          | Mode.Name.Visual-> status.resolver_visual
           | _-> status.resolver_normal
       in
       (match keyseq with
