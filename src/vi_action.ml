@@ -18,32 +18,32 @@ type insert=
 
 type motion=
   (* left right *)
-  | Left of int (* h *)
-  | Right of int (* l *)
-  | Right_nl of int (* l, including newline *)
-  | Line_FirstChar of int (* 0 *)
-  | Line_FirstNonBlank of int (* ^ *)
-  | Line_LastChar of int (* $ *)
-  | Line_LastChar_nl of int (* $ *)
-  | Line_LastNonBlank of int (* g_ *)
-  | Line_LastNonBlank_nl of int (* g_ *)
+  | Left (* h *)
+  | Right (* l *)
+  | Right_nl (* l, including newline *)
+  | Line_FirstChar (* 0 *)
+  | Line_FirstNonBlank (* ^ *)
+  | Line_LastChar (* $ *)
+  | Line_LastChar_nl (* $ *)
+  | Line_LastNonBlank (* g_ *)
+  | Line_LastNonBlank_nl (* g_ *)
 
   (* up down *)
-  | Upward of int (* k *)
-  | Downward of int (* j *)
-  | GotoLine of int (* gg or G *)
+  | Upward (* k *)
+  | Downward (* j *)
+  | GotoLine (* gg or G *)
   | GotoLine_first (* gg *)
   | GotoLine_last (* G *)
 
   (* word *)
-  | Word of int (* w *)
-  | WORD of int (* W *)
-  | Word_end of int (* e *)
-  | WORD_end of int (* E *)
-  | Word_back of int (* b *)
-  | WORD_back of int (* B *)
-  | Word_back_end of int (* ge *)
-  | WORD_back_end of int (* gE *)
+  | Word (* w *)
+  | WORD (* W *)
+  | Word_end (* e *)
+  | WORD_end (* E *)
+  | Word_back (* b *)
+  | WORD_back (* B *)
+  | Word_back_end (* ge *)
+  | WORD_back_end (* gE *)
 
   (* line *)
   | Line
@@ -55,45 +55,47 @@ type motion=
   | Occurrence_inline_till_back of string
 
   (* text object *)
-  | Sentence_backword of int (* ( *)
-  | Sentence_forward of int (* ) *)
-  | Paragraph_backward of int (* { *)
-  | Paragraph_forward of int (* } *)
+  | Sentence_backword (* ( *)
+  | Sentence_forward (* ) *)
+  | Paragraph_backward (* { *)
+  | Paragraph_forward (* } *)
 
   (* text object selection *)
-  | Word_include of int (* aw *)
-  | Word_inner of int (* iw *)
-  | WORD_include of int (* aW *)
-  | WORD_inner of int (* iW *)
-  | Sentence_include of int (* as *)
-  | Sentence_inner of int (* is *)
-  | Paragraph_include of int (* ap *)
-  | Paragraph_inner of int (* ip *)
-  | Parenthesis_include of int (* a( a) *)
-  | Parenthesis_inner of int (* i( i) *)
-  | Bracket_include of int (* a[ a] *)
-  | Bracket_inner of int (* i[ i] *)
-  | AngleBracket_include of int (* a< a> *)
-  | AngleBracket_inner of int (* i< i> *)
-  | Brace_include of int (* a{ a} *)
-  | Brace_inner of int (* i{ i} *)
-  | Quote_include of (string * int)
-  | Quote_inner of (string * int)
+  | Word_include (* aw *)
+  | Word_inner (* iw *)
+  | WORD_include (* aW *)
+  | WORD_inner (* iW *)
+  | Sentence_include (* as *)
+  | Sentence_inner (* is *)
+  | Paragraph_include (* ap *)
+  | Paragraph_inner (* ip *)
+  | Parenthesis_include (* a( a) *)
+  | Parenthesis_inner (* i( i) *)
+  | Bracket_include (* a[ a] *)
+  | Bracket_inner (* i[ i] *)
+  | AngleBracket_include (* a< a> *)
+  | AngleBracket_inner (* i< i> *)
+  | Brace_include (* a{ a} *)
+  | Brace_inner (* i{ i} *)
+  | Quote_include of string
+  | Quote_inner of string
 
   (* match *)
   | Match
 
+type register= string
+
 type t=
   | Insert of insert * int
   | Motion of motion * int
-  | Delete of motion * int
-  | Change of motion * int
+  | Delete of register * motion * int
+  | Change of register * motion * int
   | Join of int
   | Undo of int
-  | Paste_before of int
-  | Paste_after of int
-  | Yank of motion * int
-  | DeleteSelected
-  | YankSelected
+  | Paste_before of register * int
+  | Paste_after of register * int
+  | Yank of register * motion * int
+  | DeleteSelected of register
+  | YankSelected of register
   | ChangeMode of Mode.Name.t
 

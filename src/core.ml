@@ -24,10 +24,25 @@ struct
 
     method action_output= action_output
 
-    val status= Interpret.Resolver.make_status ()
+    val config= Interpret.Resolver.make_config ()
+
+    method get_register name=
+      let name= if name = "" then "\"" else name in
+      let content=
+        try Some (Interpret.RegisterMap.find
+          name
+          config.registers)
+        with _-> None
+      in content
+
+    method set_register name content=
+      let name= if name= "" then "\"" else name in
+      config.registers <-
+        Interpret.RegisterMap.add name content config.registers
 
     initializer
-      Concurrent.Thread.async (Interpret.Resolver.interpret status o action_output)
+      let status= let open Interpret.Resolver in { register= None; count= None } in
+      Concurrent.Thread.async (Interpret.Resolver.interpret config status o action_output)
   end
 
   class state=
