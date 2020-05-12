@@ -68,7 +68,7 @@ struct
 
     let resolver_dummy= fun _config _status keyseq-> Rejected keyseq
 
-    let resolver_insert config _status keyseq=
+    let resolver_insert _config _status keyseq=
       match keyseq with
       | []-> Rejected []
       | key::tl->
@@ -347,7 +347,7 @@ struct
     end
 
     module Normal = struct
-      let try_change_mode config _status keyseq=
+      let try_change_mode _config _status keyseq=
         match keyseq with
         | []-> Rejected []
         | key::tl->
@@ -687,7 +687,7 @@ struct
     end
 
     module Visual = struct
-      let try_change_mode config _status keyseq=
+      let try_change_mode _config _status keyseq=
         match keyseq with
         | []-> Rejected []
         | key::tl->
