@@ -147,14 +147,15 @@ struct
         first_num ()
 
       let try_register next_mode continuation config status keyseq=
-        let get_register config status keyseq=
+        let get_register _config status keyseq=
           match keyseq with
           | []-> Rejected []
           | key::tl->
             if not (key.Key.control || key.Key.meta || key.Key.shift) then
               match key.Key.code with
               | Char code->
-                continuation config { status with register= Some code } tl
+                let resolver= continuation in
+                Continue (resolver, { status with register= Some code }, tl)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, Mode.Name.Normal)
@@ -394,18 +395,19 @@ struct
             ~action
             _config status keyseq
           =
-          let count= get_count status
-          and next_mode=
+          let next_mode=
             if action = `Change
             then Mode.Name.Insert
             else Mode.Name.Normal
           in
-          let make_actions tl motion count=
+          let make_actions status tl motion=
             let action=
+              let register= get_register status
+              and count= get_count status in
               match action with
-              | `Change-> Change (get_register status, motion, count)
-              | `Delete-> Delete (get_register status, motion, count)
-              | `Yank-> Yank (get_register status, motion, count)
+              | `Change-> Change (register, motion, count)
+              | `Delete-> Delete (register, motion, count)
+              | `Yank-> Yank (register, motion, count)
             in
             Accept (
               Vi [action]
@@ -413,20 +415,18 @@ struct
               , next_mode)
           in
           let try_motion_g _config status keyseq=
-            let count= get_count status in
             match keyseq with
             | []-> Rejected []
             | key::tl->
               if not (key.Key.control || key.Key.meta || key.Key.shift) then
                 match key.Key.code with
-                | Char "e"-> make_actions tl Word_back_end count
-                | Char "E"-> make_actions tl WORD_back_end count
+                | Char "e"-> make_actions status tl Word_back_end
+                | Char "E"-> make_actions status tl WORD_back_end
                 | _-> Rejected keyseq
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
           in
           let try_motion_quote ?(inner=false) _config status keyseq=
-            let count= get_count status in
             match keyseq with
             | []-> Rejected []
             | key::tl->
@@ -434,15 +434,14 @@ struct
                 match key.Key.code with
                 | Char chr->
                   if inner then
-                    make_actions tl (Quote_inner chr) count
+                    make_actions status tl (Quote_inner chr)
                   else
-                    make_actions tl (Quote_include chr) count
+                    make_actions status tl (Quote_include chr)
                 | _-> Rejected keyseq
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
           in
           let try_motion_object ?(inner=false) _config status keyseq=
-            let count= get_count status in
             match keyseq with
             | []-> Rejected []
             | key::tl->
@@ -450,44 +449,44 @@ struct
                 match key.Key.code with
                 | Char "(" | Char ")" | Char "b"->
                   if inner then
-                    make_actions tl Parenthesis_inner count
+                    make_actions status tl Parenthesis_inner
                   else
-                    make_actions tl Parenthesis_include count
+                    make_actions status tl Parenthesis_include
                 | Char "[" | Char "]"->
                   if inner then
-                    make_actions tl Bracket_inner count
+                    make_actions status tl Bracket_inner
                   else
-                    make_actions tl Bracket_include count
+                    make_actions status tl Bracket_include
                 | Char "<" | Char ">"->
                   if inner then
-                    make_actions tl AngleBracket_inner count
+                    make_actions status tl AngleBracket_inner
                   else
-                    make_actions tl AngleBracket_include count
+                    make_actions status tl AngleBracket_include
                 | Char "{" | Char "}"->
                   if inner then
-                    make_actions tl Brace_inner count
+                    make_actions status tl Brace_inner
                   else
-                    make_actions tl Brace_include count
+                    make_actions status tl Brace_include
                 | Char "'"->
                   if inner then
-                    make_actions tl (Quote_inner "'") count
+                    make_actions status tl (Quote_inner "'")
                   else
-                    make_actions tl (Quote_include "'") count
+                    make_actions status tl (Quote_include "'")
                 | Char "\""->
                   if inner then
-                    make_actions tl (Quote_inner "\"") count
+                    make_actions status tl (Quote_inner "\"")
                   else
-                    make_actions tl (Quote_include "\"") count
+                    make_actions status tl (Quote_include "\"")
                 | Char "w"->
                   if inner then
-                    make_actions tl Word_inner count
+                    make_actions status tl Word_inner
                   else
-                    make_actions tl Word_include count
+                    make_actions status tl Word_include
                 | Char "W"->
                   if inner then
-                    make_actions tl WORD_inner count
+                    make_actions status tl WORD_inner
                   else
-                    make_actions tl WORD_include count
+                    make_actions status tl WORD_include
                 | Char "q"->
                   let resolver= try_motion_quote ~inner in
                   Continue (resolver, status, tl)
@@ -503,18 +502,16 @@ struct
                 match key.Key.code with
                 | Char chr->
                   if backward then
-                    make_actions
+                    make_actions status
                       tl
                       (Occurrence_inline_back chr)
-                      count
                   else
-                    make_actions tl (Occurrence_inline chr) count
+                    make_actions status tl (Occurrence_inline chr)
                 | _-> Rejected keyseq
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
           in
           let try_motion_occurence_till ?(backward=false) _config status keyseq=
-            let count= get_count status in
             match keyseq with
             | []-> Rejected []
             | key::tl->
@@ -522,12 +519,11 @@ struct
                 match key.Key.code with
                 | Char chr->
                   if backward then
-                    make_actions
+                    make_actions status
                       tl
                       (Occurrence_inline_till_back chr)
-                      count
                   else
-                    make_actions tl (Occurrence_inline_till chr) count
+                    make_actions status tl (Occurrence_inline_till chr)
                 | _-> Rejected keyseq
               else
                 Accept (Bypass [key], tl, Mode.Name.Normal)
@@ -537,25 +533,25 @@ struct
           | key::tl->
             if not (key.Key.control || key.Key.meta || key.Key.shift) then
               match key.Key.code with
-              | Char "h"-> make_actions tl Left count
-              | Char "l"-> make_actions tl Right count
-              | Char "j"-> make_actions tl Downward count
-              | Char "k"-> make_actions tl Upward count
-              | Char "0"-> make_actions tl Line_FirstChar count
-              | Char "$"-> make_actions tl Line_LastChar count
-              | Char "^"-> make_actions tl Line_FirstNonBlank count
-              | Char "w"-> make_actions tl Word count
-              | Char "W"-> make_actions tl WORD count
-              | Char "b"-> make_actions tl Word_back count
-              | Char "B"-> make_actions tl WORD_back count
-              | Char "e"-> make_actions tl Word_end count
-              | Char "E"-> make_actions tl WORD_end count
+              | Char "h"-> make_actions status tl Left
+              | Char "l"-> make_actions status tl Right
+              | Char "j"-> make_actions status tl Downward
+              | Char "k"-> make_actions status tl Upward
+              | Char "0"-> make_actions status tl Line_FirstChar
+              | Char "$"-> make_actions status tl Line_LastChar
+              | Char "^"-> make_actions status tl Line_FirstNonBlank
+              | Char "w"-> make_actions status tl Word
+              | Char "W"-> make_actions status tl WORD
+              | Char "b"-> make_actions status tl Word_back
+              | Char "B"-> make_actions status tl WORD_back
+              | Char "e"-> make_actions status tl Word_end
+              | Char "E"-> make_actions status tl WORD_end
               | Char "g"->
                 let resolver= try_motion_g in
                 Continue (resolver, status, tl)
               | Char "d"->
                 if action = `Delete then
-                  make_actions tl Line count
+                  make_actions status tl Line
                 else Rejected keyseq
               | Char "a"->
                 let inner= false in
@@ -581,10 +577,10 @@ struct
                 let backward= true in
                 let resolver= try_motion_occurence_till ~backward in
                 Continue (resolver, status, tl)
-              | Char "%"-> make_actions tl Match 1
+              | Char "%"-> make_actions status tl Match
               | Char "y"->
                 if action = `Yank then
-                  make_actions tl Line count
+                  make_actions status tl Line
                 else Rejected keyseq
               | _->
                 Rejected keyseq
@@ -755,7 +751,9 @@ struct
         | _->
           match try_change_mode config status keyseq with
           | Rejected keyseq->
-            Common.try_count try_motion_modify config status keyseq
+            Common.try_register Mode.Name.Visual
+              (Common.try_count try_motion_modify)
+              config status keyseq
           | r-> r
 
     end
