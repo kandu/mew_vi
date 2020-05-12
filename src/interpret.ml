@@ -448,7 +448,7 @@ struct
             | key::tl->
               if not (key.Key.control || key.Key.meta || key.Key.shift) then
                 match key.Key.code with
-                | Char "(" | Char ")"->
+                | Char "(" | Char ")" | Char "b"->
                   if inner then
                     make_actions tl Parenthesis_inner count
                   else
@@ -553,7 +553,8 @@ struct
               | Char "g"->
                 let resolver= try_motion_g in
                 Continue (resolver, status, tl)
-              | Char "d"-> if action = `Delete then
+              | Char "d"->
+                if action = `Delete then
                   make_actions tl Line count
                 else Rejected keyseq
               | Char "a"->
@@ -581,7 +582,8 @@ struct
                 let resolver= try_motion_occurence_till ~backward in
                 Continue (resolver, status, tl)
               | Char "%"-> make_actions tl Match 1
-              | Char "y"-> if action = `Yank then
+              | Char "y"->
+                if action = `Yank then
                   make_actions tl Line count
                 else Rejected keyseq
               | _->
