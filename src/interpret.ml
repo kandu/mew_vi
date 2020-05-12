@@ -73,17 +73,15 @@ struct
       | []-> Rejected []
       | key::tl->
         if key.Key.control && key.code = Char "[" then
-          (config.set_mode Mode.Name.Normal;
           Accept (
             Vi [Motion (Left, 1); ChangeMode Normal]
             , tl
-            , Mode.Name.Normal))
+            , Mode.Name.Normal)
         else if key.code = Escape then
-          (config.set_mode Mode.Name.Normal;
           Accept (
             Vi [Motion (Left, 1); ChangeMode Normal]
             , tl
-            , Mode.Name.Normal))
+            , Mode.Name.Normal)
         else
           Accept (
             Bypass [key]
@@ -192,9 +190,15 @@ struct
                   , tl
                   , next_mode)
               | Char "g"-> Accept (
-                  Vi [Motion (GotoLine_first, count)]
-                  , tl
-                  , next_mode)
+                  match status.count with
+                  | None->
+                    Vi [Motion (GotoLine_first, count)]
+                    , tl
+                    , next_mode
+                  | Some count->
+                    Vi [Motion (GotoLine, (count-1))]
+                    , tl
+                    , next_mode)
               | _-> Rejected keyseq
             else
               Accept (Bypass [key], tl, next_mode)
@@ -303,9 +307,15 @@ struct
                   , tl
                   , next_mode)
               | Char "G"-> Accept (
-                  Vi [Motion (GotoLine_last, count)]
-                  , tl
-                  , next_mode)
+                  match status.count with
+                  | None->
+                    Vi [Motion (GotoLine_last, count)]
+                    , tl
+                    , next_mode
+                  | Some count->
+                    Vi [Motion (GotoLine, (count-1))]
+                    , tl
+                    , next_mode)
               | Char "g"->
                 let resolver= try_motion_g in
                 Continue (resolver, status, tl)
@@ -344,41 +354,36 @@ struct
           if not (key.Key.control || key.Key.meta || key.Key.shift) then
             match key.Key.code with
             | Char "i"->
-              (config.set_mode Mode.Name.Insert;
               Accept (
                 Vi [ChangeMode Insert]
                 , tl
-                , Mode.Name.Insert))
+                , Mode.Name.Insert)
             | Char "I"->
-              (config.set_mode Mode.Name.Insert;
               Accept (
                 Vi [
                   Motion (Line_FirstNonBlank, 1);
                   ChangeMode Insert]
                 , tl
-                , Mode.Name.Insert))
+                , Mode.Name.Insert)
             | Char "a"->
-              (config.set_mode Mode.Name.Insert;
               Accept (
                 Vi [
                   Motion (Right_nl, 1);
                   ChangeMode Insert]
                 , tl
-                , Mode.Name.Insert))
+                , Mode.Name.Insert)
             | Char "A"->
-              (config.set_mode Mode.Name.Insert;
               Accept (
                 Vi [
                   Motion (Line_LastChar_nl, 1);
                   ChangeMode Insert]
                 , tl
-                , Mode.Name.Insert))
+                , Mode.Name.Insert)
             | Char "v"->
-              (config.set_mode Mode.Name.Visual;
               Accept (
                 Vi [ ChangeMode Visual]
                 , tl
-                , Mode.Name.Visual))
+                , Mode.Name.Visual)
             | _-> Rejected keyseq
           else
             Rejected keyseq
@@ -687,26 +692,23 @@ struct
         | []-> Rejected []
         | key::tl->
           if key.Key.control && key.code = Char "[" then
-            (config.set_mode Mode.Name.Normal;
             Accept (
               Vi [ChangeMode Normal]
               , tl
-              , Mode.Name.Normal))
+              , Mode.Name.Normal)
           else if key.code = Escape then
-            (config.set_mode Mode.Name.Normal;
             Accept (
               Vi [ChangeMode Normal]
               , tl
-              , Mode.Name.Normal))
+              , Mode.Name.Normal)
           else
           if not (key.Key.control || key.Key.meta || key.Key.shift) then
             match key.Key.code with
             | Char "v"->
-              (config.set_mode Mode.Name.Normal;
               Accept (
                 Vi [ ChangeMode Normal]
                 , tl
-                , Mode.Name.Normal))
+                , Mode.Name.Normal)
             | _-> Rejected keyseq
           else
             Rejected keyseq
@@ -802,12 +804,12 @@ struct
         | Accept (edit, keyseq, next_mode)->
           config.set_mode next_mode;
           MsgBox.put action edit >>=
-          interpret config status ~keyseq keyIn action
+          interpret config { status with count= None} ~keyseq keyIn action
         | Continue (resolver, status, keyseq)->
           interpret config status ~resolver ~keyseq keyIn action ()
         | Rejected _keyseq->
           MsgBox.put action Dummy >>=
-          interpret config status keyIn action
+          interpret config { status with count= None } keyIn action
   end
 end
 
