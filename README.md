@@ -1,5 +1,7 @@
 # mew\_vi — Modal editing witch, VI interpreter
 
+[![Build Status](https://travis-ci.org/kandu/mew_vi.svg?branch=master)](https://travis-ci.org/kandu/mew_vi)
+
 This is a vi-like modal editing engine generator.
 
 ## Usage
