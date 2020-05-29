@@ -49,7 +49,6 @@ struct
       set_mode: ?step:step -> Mode.Name.t -> unit;
       keyseq: keyseq signal;
       set_keyseq: ?step:step -> keyseq -> unit;
-      mutable registers: Register.content RegisterMap.t;
       mutable resolver_insert: t;
       mutable resolver_normal: t;
       mutable resolver_visual: t;
@@ -761,7 +760,6 @@ struct
     let make_config
         ?(mode= Mode.Name.Insert)
         ?(keyseq=[])
-        ?(registers= RegisterMap.empty)
         ?(resolver_insert= resolver_insert)
         ?(resolver_normal= Normal.resolver_normal)
         ?(resolver_visual= Visual.resolver_visual)
@@ -775,7 +773,6 @@ struct
         set_mode;
         keyseq;
         set_keyseq;
-        registers;
         resolver_insert;
         resolver_normal;
         resolver_visual;

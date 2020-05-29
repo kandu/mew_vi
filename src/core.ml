@@ -26,19 +26,13 @@ struct
 
     val config= Interpret.Resolver.make_config ()
 
-    method get_register name=
-      let name= if name = "" then "\"" else name in
-      let content=
-        try Some (Interpret.RegisterMap.find
-          name
-          config.registers)
-        with _-> None
-      in content
+    method get_register
+      : string -> Interpret.Register.content option
+      = state#get_register
 
-    method set_register name content=
-      let name= if name= "" then "\"" else name in
-      config.registers <-
-        Interpret.RegisterMap.add name content config.registers
+    method set_register
+      : string -> Interpret.Register.content -> unit
+      = state#set_register
 
     initializer
       let status= let open Interpret.Resolver in { register= None; count= None } in
@@ -57,6 +51,24 @@ struct
   object(self)
     inherit Base.state modes
     method vi_edit= new edit self
+
+    val mutable registers
+      : Interpret.Register.content Interpret.RegisterMap.t
+      = Interpret.RegisterMap.empty
+
+    method get_register name=
+      let name= if name = "" then "\"" else name in
+      let content=
+        try Some (Interpret.RegisterMap.find name registers)
+        with _-> None
+      in content
+
+    method set_register name content=
+      let name= if name= "" then "\"" else name in
+      registers <- Interpret.RegisterMap.add name content registers
+
+    method get_registers= registers
+    method set_registers regs= registers <- regs
   end
 end
 
